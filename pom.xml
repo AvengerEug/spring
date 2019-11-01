@@ -12,6 +12,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>configration-annotation</module>
+        <module>implements-springboot</module>
     </modules>
 
     <artifactId>spring</artifactId>
