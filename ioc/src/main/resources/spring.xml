@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd"
+       default-autowire="byType">
+    <!-- default-autowire="byType" 配置了自动装配的模式, 若想对单个bean设置其它装配模式, 可参考userService bean的写法 -->
+
+    <!-- 开启注解驱动 -->
+    <context:annotation-config />
+    <!-- 开启注解扫描 -->
+    <context:component-scan base-package="com.eugene.sumarry.ioc.classpathxmltype"/>
+
+    <bean id="userDao" class="com.eugene.sumarry.ioc.classpathxmltype.UserDaoImpl"/>
+
+    <bean id="userDao1" class="com.eugene.sumarry.ioc.classpathxmltype.UserDaoImpl1"/>
+
+    <bean id="indexDao" class="com.eugene.sumarry.ioc.classpathxmltype.IndexDaoImpl"/>
+
+    <bean id="userService" class="com.eugene.sumarry.ioc.classpathxmltype.UserService" autowire="byName">
+        <!-- 通过构造器的方式依赖注入 -->
+        <!--<constructor-arg index="0" ref="userDao1"/>
+        <constructor-arg index="1" value="eugene"/>
+        <constructor-arg index="2" ref="indexDao"/>-->
+
+        <!-- 默认使用属性的set方法注入 -->
+        <!--<property name="userDao" ref="userDao"/>
+        <property name="indexDao" ref="indexDao"/>-->
+        <property name="name" value="eugene"/>
+
+        <!-- 使用自动装配, 则不需要在此描述属性的依赖关系了 -->
+        <!-- 若使用byName, 则会根据 bean id首字符大写添加set的方式注入, eg假设有个bean名称叫 userDao1, 那么同类型有多个bean并使用byName的自动装配模式的
+        话, 若提供了 setUserDao1方法, 则会将userDao1这个bean注入进去 -->
+    </bean>
+
+</beans>
