@@ -1,11 +1,10 @@
 package com.eugene.sumarry.ioc.annotationtype;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.stereotype.Service;
 
 @Service
-public abstract class UserService {
+public class UserService {
 
     /**
      * @Autowired默认是根据byType的方式依赖注入, 若byType的类型的实例不止一个(内部把异常吃掉), 则会根据byName的方式来注入(也就是变成@Resource功能),
@@ -38,12 +37,14 @@ public abstract class UserService {
     @Autowired
     private IndexDao indexDao;
 
-    public void sout() {
+    @Autowired
+    private PrototypeUtils prototypeUtils;
+
+    public void sout(String name) {
         System.out.println("UserService" + this.hashCode());
         // 使用@Lookup注解 或者使用spring上下文获取bean
-        System.out.println("BasicService" + getBasicService().hashCode());
+        System.out.println("BasicService" + prototypeUtils.getBasicService(name).hashCode());
+        System.out.println("带参构造方法" + prototypeUtils.getBasicService(name).getUserName());
+        System.out.println("不带参构造方法" + prototypeUtils.getBasicService().getUserName());
     }
-
-    @Lookup
-    public abstract BasicService getBasicService();
 }
