@@ -7,5 +7,10 @@ public class Entry {
     public static void main(String[] args) {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
         UserService userService = context.getBean(UserService.class);
+        userService.sout();
+        UserService userService1 = context.getBean(UserService.class);
+        userService1.sout();
+        UserService userService2 = context.getBean(UserService.class);
+        userService2.sout();
     }
 }
