@@ -4,8 +4,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.context.annotation.Profile;
 
-@ComponentScan(value = "com.eugene.sumarry.ioc.annotationType", nameGenerator = MyBeanNameGenerator.class)
+@ComponentScan(value = "com.eugene.sumarry.ioc.annotationType")
 @ImportResource("classpath:spring-string.xml")
-@Profile("dev")
-public class AppConfig {
+@Profile("prod")
+public class AppConfigProd {
 }

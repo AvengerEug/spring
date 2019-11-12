@@ -1,6 +1,7 @@
 package com.eugene.sumarry.ioc.annotationtype;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,6 +28,15 @@ public class UserService {
      *      name属性名还是要依赖注入的变量名, 在@Resource的byName方式下, 这个名字一定
      *      就是bean的名字
      *   3. @Autowired注解当注入的类型有多个时, 会退化成@Resource的功能
+     *
+     * byType注入类型当有多个相同类型bean的时候, 可以采用如下几种方法(不考虑xml配置的情况)解决:
+     * 1. 将属性名设置成 要注入bean的名字(原理是会降级成@Resource注入模式, 即下述的第三点)
+     * 2. 在一个bean中添加@Primary注解, 表示当遇到多个类型的时候, 使用此bean进行注入
+     * 3. 修改成@Resource注解, 添加存在bean的set方法或者注解中添加bean的名称
+     * 4. @Autowired和@Qualifier结合使用, 并在@Qualifier注解中添加指定注入bean的name
+     *
+     *
+     * spring 单例与单例之间的循环引用是ok的, 但是如果相互引用的bean中有原型的scope对象的话, 那么会报错
      */
     @Autowired
     private UserDao userDaoImpl1Eugene;
