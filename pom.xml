@@ -14,6 +14,7 @@
         <module>configration-annotation</module>
         <module>implements-springboot</module>
         <module>ioc</module>
+        <module>aop</module>
     </modules>
 
     <artifactId>spring</artifactId>
