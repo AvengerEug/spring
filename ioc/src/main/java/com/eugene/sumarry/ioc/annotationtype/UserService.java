@@ -1,11 +1,14 @@
 package com.eugene.sumarry.ioc.annotationtype;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+
 @Service
-public class UserService {
+public class UserService implements InitializingBean {
 
     /**
      * @Autowired默认是根据byType的方式依赖注入, 若byType的类型的实例不止一个(内部把异常吃掉), 则会根据byName的方式来注入(也就是变成@Resource功能),
@@ -56,5 +59,18 @@ public class UserService {
         System.out.println("BasicService" + prototypeUtils.getBasicService(name).hashCode());
         System.out.println("带参构造方法" + prototypeUtils.getBasicService(name).getUserName());
         System.out.println("不带参构造方法" + prototypeUtils.getBasicService().getUserName());
+    }
+
+
+    @PostConstruct
+    public void init111() {
+        System.out.println("UserService 初始化结束(@PostConstruct的方式), 会调此方法, 属性都已经注入进去");
+        System.out.println(this);
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        System.out.println("UserService 初始化结束(实现接口的方式), 会调此方法, 属性都已经注入进去");
+        System.out.println("注解的执行顺序比实现接口的方式先执行");
     }
 }

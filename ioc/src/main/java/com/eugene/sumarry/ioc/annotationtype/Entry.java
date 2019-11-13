@@ -21,5 +21,8 @@ public class Entry {
         userService1.sout("eugene1");
         UserService userService2 = context.getBean(UserService.class);
         userService2.sout("eugene2");
+
+        // 在AppConfig类中的@ComponentScan注解中将该类的扫描去除了, 所以会报错
+        //context.getBean(UnsupportScan.class);
     }
 }
