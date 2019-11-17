@@ -1,7 +1,11 @@
 package com.eugene.sumarry.aop.main;
 
 import com.eugene.sumarry.aop.main.dao.BaseDao;
+import com.eugene.sumarry.aop.main.daoproxy.UserDao;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import sun.misc.ProxyGenerator;
+
+import java.io.*;
 
 /**
  * 横切性问题: (共同的特点, 不会影响主业务流程)
@@ -23,6 +27,45 @@ public class Entry {
     public static void main(String[] args) {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
         BaseDao baseDao = context.getBean(BaseDao.class);
-        baseDao.findList();
+        System.out.println("====================== findList(s)\n");
+        baseDao.findList("s");
+        System.out.println("====================== findList(1)\n");
+        baseDao.findList(1);
+
+        System.out.println("====================== findList(\"1\", 1)\n");
+        baseDao.findList("1", 1);
+
+        System.out.println("====================== testAnnotationExecution()\n");
+        baseDao.testAnnotationExecution();
+
+        System.out.println("====================== testArgsAnnotationExecution()\n");
+        baseDao.testArgsAnnotationExecution("eugene");
+
+        System.out.println("--------------- proxy type -----------------\n");
+        UserDao userDao = context.getBean(UserDao.class);
+        userDao.findList();
+
+        System.out.println("*************** 使用jdk源码生成代理对象的class文件内容 *********");
+        // 生成的代理对象是一个字节码文件, 其实就是一串字节数组, 把它写成class文件反编译后就能看到内容了
+        // 可以看到的内容是 生成的代理对象的类UserDaoTarget是继承Proxy且实现UserDao的
+        byte classByte[] = ProxyGenerator.generateProxyClass("UserDaoTarget", new Class[] {UserDao.class});
+        OutputStream os = null;
+        try {
+            os = new FileOutputStream(new File("c:\\UserDaoTarget.class"));
+            os.write(classByte);
+            os.flush();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                os.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 }
