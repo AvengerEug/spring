@@ -2,6 +2,8 @@ package com.eugene.sumarry.aop.main;
 
 import com.eugene.sumarry.aop.main.dao.BaseDao;
 import com.eugene.sumarry.aop.main.dao.WithinDao;
+import com.eugene.sumarry.aop.main.daoproxy.PrototypeDao;
+import com.eugene.sumarry.aop.main.daoproxy.StudentDaoImpl;
 import com.eugene.sumarry.aop.main.daoproxy.UserDao;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import sun.misc.ProxyGenerator;
@@ -46,8 +48,11 @@ public class Entry {
         WithinDao withinDao = context.getBean(WithinDao.class);
         withinDao.testWithinAnnotation();
 
+        System.out.println("====================== testArountJoinpoint()\n");
+        withinDao.testArountJoinpoint(1L);
+
         System.out.println("--------------- proxy type-- findList -----------------\n");
-        UserDao userDao = context.getBean(UserDao.class);
+        UserDao userDao = (UserDao) context.getBean("userDaoImpl");
         userDao.findList();
 
         System.out.println("--------------- proxy type-- findById -----------------\n");
@@ -75,5 +80,15 @@ public class Entry {
             }
         }
 
+        System.out.println("***************** 强制将某个类(StudentDaoImpl)变成其他类型********************");
+        UserDao userDao2 = (UserDao) context.getBean("studentDaoImpl");
+        userDao2.findList();
+
+        System.out.println("***************** 测试原型对象产生的代理对象是否也为原型的 ********************");
+        PrototypeDao prototypeDao1 = context.getBean(PrototypeDao.class);
+        PrototypeDao prototypeDao2 = context.getBean(PrototypeDao.class);
+        prototypeDao1.testPrototypeAspect();
+        // 每执行一次增强的方法, 代理对象都是新的
+        prototypeDao2.testPrototypeAspect();
     }
 }

@@ -1,5 +1,6 @@
 ## AOP知识点(基于java config的方式构建)
 
+---
 ### 概念(concepts)
   1. 切面(Aspect): 包含切点、连接点、通知的一个集合
   2. 切点(Pointcut): 切入点, 要对代码增强的地方, 可以是整个类、整个类的整个方法、带某些特性的方法等等
@@ -8,6 +9,7 @@
   5. 目标对象(Target): 需要被代理的对象
   6. 代理对象(Proxy): 代理目标对象的对象
   
+---
 ### 如何定义一个切面(spring 5.x)
   1. 启动AspectJ语法。添加`@EnableAspectJAutoProxy`注解(一般在项目入口添加)
      ```java
@@ -43,6 +45,7 @@
      ```
   5. 至此, 一个切面就完成了, 这个切面切了`com.eugene.sumarry.aop.main.dao`包及子包下的所有方法。
 
+--- 
 ### 切点的表达式
   1. execution: 官网推荐的最常用的方式, 因为其粒度最低, 可以精确到具体的某一个方法
      ```java
@@ -136,11 +139,68 @@
             System.out.println("condition after");
         }
      ```
-    
+
+---
 ### AOP注意点
   1. `@EnableAspectJAutoProxy`注解中的`proxyTargetClass`属性
      * 默认为false, 使用的是jdk动态代理, `代理对象与目标对象的关系是`: **实现了同一个接口**
      * 设置为true, 则使用cglib生成代理对象, `代理对象与目标对象的关系是`: **继承**
   2. jdk 动态代理基于接口产生的原因:
      * jdk动态代理生成的代理类中已经`默认继承Proxy类`了, `由于java单继承的特性, 所有只能基于接口生成代理类了`
-  3. 
+
+--- 
+### 创建原型代理对象
+  ```java
+    /**
+     * 1. @Scope("prototype")表示每次获取的代理对象都是原型的
+     * 2. ("perthis(this(com.eugene.sumarry.aop.main.daoproxy.PrototypeDao))")
+     *    表示当代理对象的类型是com.eugene.sumarry.aop.main.daoproxy.PrototypeDao
+     *    时, 代理对象是原型的, 其它的为单例的
+     * 3. 每一次获取PrototypeDao类型的bean的时候, 代理对象都是最新的.
+     * 4. 当目标对象是单例的, 但是代理对象是原型的, 在ProceedingJoinPoint类中获取代理对象和目标对象都是最新的。
+     */
+    @Component
+    @Aspect("perthis(this(com.eugene.sumarry.aop.main.daoproxy.PrototypeDao))")
+    @Scope("prototype")
+    public class PrototypeAspect {
+    
+        /**
+         * 对com.eugene.sumarry.aop.main.daoproxy.PrototypeDao类下的所有方法进行增强,
+         * 并且当代理对象的类型是com.eugene.sumarry.aop.main.daoproxy.PrototypeDao时,
+         * 代理对象的scope为prototype
+         */
+        @Pointcut("execution(* com.eugene.sumarry.aop.main.daoproxy.PrototypeDao.*(..))")
+        public void prototypePointcut() {
+        }
+    
+        @Around("prototypePointcut()")
+        public void testPrototypeAspect(ProceedingJoinPoint proceedingJoinPoint) {
+            try {
+                // this等同于proceedingJoinPoint.getThis()
+                System.out.println("环绕前");
+                System.out.println("代理对象hashcode: " + this.hashCode());
+                System.out.println("目标对象hashcode: " + proceedingJoinPoint.getTarget().hashCode());
+                proceedingJoinPoint.proceed();
+                System.out.println("环绕后");
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+            }
+        }
+    }
+  ```
+  
+---
+### 强制将一个类转成毫无关系的类型
+  ```java
+    @Component
+    @Aspect
+    public class ProxyTypeAspect {
+    
+        /**
+         * 会将StudentDaoImpl这个类 创建bean的时候变成userDao类型, 并将UserDaoImpl中的方法copy到StudentDaoImpl bean中去
+         */
+        @DeclareParents(value = "com.eugene.sumarry.aop.main.daoproxy.StudentDaoImpl", defaultImpl = UserDaoImpl.class)
+        private UserDao userDao;
+    }
+  ```
+  * 在使用spring上下文获取`StudentDaoImpl`类型的bean时, 它会变成UserDao类型, 并将`UserDaoImpl`类的所有方法copy进去

@@ -1,5 +1,7 @@
 package com.eugene.sumarry.aop.main;
 
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.springframework.stereotype.Component;
 
@@ -105,6 +107,32 @@ public class MyAspectj {
     @After("pointcutWithinAnnotation()")
     public void afterWithinAnnotation() {
         System.out.println("类上加上@AspwctWithin注解时, 里面的方法才会被增强");
+    }
+
+    /**
+     * 定义一个切点, 只对dao包下的第一个参数为long的方法增强
+     */
+    @Pointcut("execution(* com.eugene.sumarry.aop.main.dao..*(java.lang.Long, ..))")
+    public void aroundPointcut() {
+    }
+
+    @Around("aroundPointcut()")
+    public void testAroundPointcut(ProceedingJoinPoint proceedingJoinPoint) {
+        System.out.println("环绕通知---- 入口");
+        Object[] args = proceedingJoinPoint.getArgs();
+        if (args != null && args.length > 0) {
+            for (int i = 0; i < args.length; i++) {
+                args[i] = (Long)args[i] + 90L;
+            }
+        }
+
+        try {
+            proceedingJoinPoint.proceed(args);
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+        }
+
+        System.out.println("环绕结束");
     }
 
 }
