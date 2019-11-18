@@ -95,4 +95,16 @@ public class MyAspectj {
         System.out.println("参数上加了args注解才会被增强");
     }
 
+    /**
+     * 定义在aop环境下添加了注解的类中的所有方法会被增强
+     */
+    @Pointcut("@within(com.eugene.sumarry.aop.main.annotation.AspwctWithin)")
+    public void pointcutWithinAnnotation() {
+    }
+
+    @After("pointcutWithinAnnotation()")
+    public void afterWithinAnnotation() {
+        System.out.println("类上加上@AspwctWithin注解时, 里面的方法才会被增强");
+    }
+
 }

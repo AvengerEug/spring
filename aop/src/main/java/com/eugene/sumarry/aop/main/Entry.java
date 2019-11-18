@@ -1,6 +1,7 @@
 package com.eugene.sumarry.aop.main;
 
 import com.eugene.sumarry.aop.main.dao.BaseDao;
+import com.eugene.sumarry.aop.main.dao.WithinDao;
 import com.eugene.sumarry.aop.main.daoproxy.UserDao;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import sun.misc.ProxyGenerator;
@@ -41,9 +42,16 @@ public class Entry {
         System.out.println("====================== testArgsAnnotationExecution()\n");
         baseDao.testArgsAnnotationExecution("eugene");
 
-        System.out.println("--------------- proxy type -----------------\n");
+        System.out.println("====================== testWithinAnnotation()\n");
+        WithinDao withinDao = context.getBean(WithinDao.class);
+        withinDao.testWithinAnnotation();
+
+        System.out.println("--------------- proxy type-- findList -----------------\n");
         UserDao userDao = context.getBean(UserDao.class);
         userDao.findList();
+
+        System.out.println("--------------- proxy type-- findById -----------------\n");
+        userDao.findById(1);
 
         System.out.println("*************** 使用jdk源码生成代理对象的class文件内容 *********");
         // 生成的代理对象是一个字节码文件, 其实就是一串字节数组, 把它写成class文件反编译后就能看到内容了

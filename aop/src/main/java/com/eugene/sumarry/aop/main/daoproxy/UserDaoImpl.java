@@ -9,4 +9,9 @@ public class UserDaoImpl implements UserDao {
     public void findList() {
         System.out.println("find user list");
     }
+
+    @Override
+    public void findById(Integer id) {
+        System.out.println("find by id");
+    }
 }
