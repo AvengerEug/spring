@@ -1,4 +1,4 @@
-package com.eugene.sumarry.aop.main;
+package com.eugene.sumarry.aop.byAnnotation;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +24,6 @@ import org.springframework.stereotype.Component;
  */
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @Component
-@ComponentScan("com.eugene.sumarry.aop.main")
+@ComponentScan("com.eugene.sumarry.aop.byAnnotation")
 public class AppConfig {
 }

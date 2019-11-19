@@ -1,4 +1,4 @@
-package com.eugene.sumarry.aop.annotation;
+package com.eugene.sumarry.aop.studyannotation;
 
 
 import java.lang.reflect.Field;

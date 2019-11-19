@@ -1,10 +1,9 @@
-package com.eugene.sumarry.aop.main;
+package com.eugene.sumarry.aop.byAnnotation;
 
-import com.eugene.sumarry.aop.main.dao.BaseDao;
-import com.eugene.sumarry.aop.main.dao.WithinDao;
-import com.eugene.sumarry.aop.main.daoproxy.PrototypeDao;
-import com.eugene.sumarry.aop.main.daoproxy.StudentDaoImpl;
-import com.eugene.sumarry.aop.main.daoproxy.UserDao;
+import com.eugene.sumarry.aop.byAnnotation.dao.BaseDao;
+import com.eugene.sumarry.aop.byAnnotation.dao.WithinDao;
+import com.eugene.sumarry.aop.byAnnotation.daoproxy.PrototypeDao;
+import com.eugene.sumarry.aop.byAnnotation.daoproxy.UserDao;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import sun.misc.ProxyGenerator;
 

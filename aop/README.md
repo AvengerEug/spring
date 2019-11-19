@@ -15,7 +15,7 @@
      ```java
          @EnableAspectJAutoProxy(proxyTargetClass = true)
          @Component
-         @ComponentScan("com.eugene.sumarry.aop.main")
+         @ComponentScan(byAspectj)
          public class AppConfig {
          }
      ```
@@ -79,7 +79,7 @@
         /**
          * 定义了一个切点, 表示带了@AspectAnnotation注解的才会被增强
          */
-        @Pointcut("@annotation(com.eugene.sumarry.aop.main.annotation.AspectAnnotation)")
+        @Pointcut(studyannotation)
         public void pointcutAnnotation() {
         }
      ```
@@ -98,7 +98,7 @@
         /**
          * 定义在aop环境下添加了注解的类中的所有方法会被增强
          */
-        @Pointcut("@within(com.eugene.sumarry.aop.main.annotation.AspwctWithin)")
+        @Pointcut(AspectWithin)
         public void pointcutWithinAnnotation() {
         }
      ```
@@ -199,8 +199,58 @@
         /**
          * 会将StudentDaoImpl这个类 创建bean的时候变成userDao类型, 并将UserDaoImpl中的方法copy到StudentDaoImpl bean中去
          */
-        @DeclareParents(value = "com.eugene.sumarry.aop.main.daoproxy.StudentDaoImpl", defaultImpl = UserDaoImpl.class)
+        @DeclareParents(value = "com.eugene.sumarry.aop.byAnnotation.daoproxy.StudentDaoImpl", defaultImpl = UserDaoImpl.class)
         private UserDao userDao;
     }
   ```
   * 在使用spring上下文获取`StudentDaoImpl`类型的bean时, 它会变成UserDao类型, 并将`UserDaoImpl`类的所有方法copy进去
+  * 只能在切面中对类进行强制转类型, 具体可以参考下面xml配置版和上述注解版
+   ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:aop="http://www.springframework.org/schema/aop"
+           xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/aop
+           http://www.springframework.org/schema/aop/spring-aop.xsd" >
+    
+        <!-- 开启CGLIB代理 -->
+        <aop:aspectj-autoproxy proxy-target-class="true"/>
+    
+        <aop:config>
+            <aop:pointcut id="myPointcut" expression="execution(* com.eugene.sumarry.aop.byXML.*.*(..))"/>
+    
+            <!-- 切面绑定bean的原因是想用bean中的某个方法作为增强的逻辑 -->
+            <aop:aspect id="myAspect" ref="xmlAdviceBean">
+    
+                <!-- 连接点 将切点和通知绑定, 前置通知 -->
+                <aop:before method="before" pointcut-ref="myPointcut"/>
+    
+                <!-- 连接点 将切点和通知绑定, 后置通知 -->
+                <aop:after method="after" pointcut-ref="myPointcut"/>
+    
+                <!-- xml版对某个类进行增强, 让它强制实现某个接口, 并将配置的默认实现类的方法copy到指定类中 -->
+                <aop:declare-parents
+                        types-matching="com.eugene.sumarry.aop.byXML.StudentDao"
+                        implement-interface="com.eugene.sumarry.aop.byXML.Dao"
+                        default-impl="com.eugene.sumarry.aop.byXML.UserDao"
+                />
+    
+            </aop:aspect>
+        </aop:config>
+    
+        <!-- 使用property属性注入 一定要有set方法, 当添加自动装配配置后, 可以省略property注入属性 -->
+        <bean id="xmlAdviceBean" class="com.eugene.sumarry.aop.byXML.XMLAspectBean" autowire="byName"/>
+        <bean id="userDao" class="com.eugene.sumarry.aop.byXML.UserDao"/>
+        <bean id="studentDao" class="com.eugene.sumarry.aop.byXML.StudentDao"/>
+    </beans>
+  ```
+  * 注意: 虽然类被强制实现了接口, 但是`copy的原生的逻辑而不是代理后增强的逻辑`, 同时要开启`cglib`代理才能实现这一功能
+  
+---
+### Spring AOP和AspectJ的关系
+  1. Spring AOP可以支持AspectJ的语法, 使用`@EnableAspectJAutoProxy`注解声明
+  2. AspectJ是静态织入, 在编译成字节码文件时就被增强了。
+     Spring AOP是运行时织入, 在运行时才对类进行增强

@@ -1,7 +1,7 @@
-package com.eugene.sumarry.aop.main.dao;
+package com.eugene.sumarry.aop.byAnnotation.dao;
 
-import com.eugene.sumarry.aop.main.annotation.AspectAnnotation;
-import com.eugene.sumarry.aop.main.annotation.AspectArgs;
+import com.eugene.sumarry.aop.byAnnotation.annotation.AspectAnnotation;
+import com.eugene.sumarry.aop.byAnnotation.annotation.AspectArgs;
 import org.springframework.stereotype.Repository;
 
 @Repository

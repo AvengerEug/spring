@@ -1,4 +1,4 @@
-package com.eugene.sumarry.aop.annotation;
+package com.eugene.sumarry.aop.studyannotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

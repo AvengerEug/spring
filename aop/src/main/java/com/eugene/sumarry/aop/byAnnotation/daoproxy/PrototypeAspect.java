@@ -1,4 +1,4 @@
-package com.eugene.sumarry.aop.main.daoproxy;
+package com.eugene.sumarry.aop.byAnnotation.daoproxy;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -25,7 +25,7 @@ public class PrototypeAspect {
      * 并且当代理对象的类型是com.eugene.sumarry.aop.main.daoproxy.PrototypeDao时,
      * 代理对象的scope为prototype
      */
-    @Pointcut("execution(* com.eugene.sumarry.aop.main.daoproxy.PrototypeDao.*(..))")
+    @Pointcut("execution(* com.eugene.sumarry.aop.byAnnotation.daoproxy.PrototypeDao.*(..))")
     public void prototypePointcut() {
     }
 

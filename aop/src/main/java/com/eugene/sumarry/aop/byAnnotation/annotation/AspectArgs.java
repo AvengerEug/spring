@@ -1,4 +1,4 @@
-package com.eugene.sumarry.aop.main.annotation;
+package com.eugene.sumarry.aop.byAnnotation.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

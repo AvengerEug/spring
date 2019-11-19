@@ -1,6 +1,5 @@
-package com.eugene.sumarry.aop.main;
+package com.eugene.sumarry.aop.byAnnotation;
 
-import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.springframework.stereotype.Component;
@@ -23,7 +22,7 @@ public class MyAspectj {
      *
      * 里面的execution表达式叫做连接点
      */
-    @Pointcut("execution(* com.eugene.sumarry.aop.main.dao..*.*(..))")
+    @Pointcut("execution(* com.eugene.sumarry.aop.byAnnotation.dao..*.*(..))")
     public void pointcutExecution() {
     }
 
@@ -41,7 +40,7 @@ public class MyAspectj {
     /**
      * Within粒度比较大, 只能精确包下面的类
      */
-    @Pointcut("within(com.eugene.sumarry.aop.main.dao.*)")
+    @Pointcut("within(com.eugene.sumarry.aop.byAnnotation.dao.*)")
     public void pointcutWithin() {
     }
 
@@ -67,7 +66,7 @@ public class MyAspectj {
      *
      * 通知中里面执行的切点可以是对应的函数 也可以是表达式
      */
-    @After("pointcutExecution() && !execution(* com.eugene.sumarry.aop.main.dao..*.*(java.lang.String, java.lang.Integer)))")
+    @After("pointcutExecution() && !execution(* com.eugene.sumarry.aop.byAnnotation.dao..*.*(java.lang.String, java.lang.Integer)))")
     public void conditionAfter() {
         System.out.println("condition after");
     }
@@ -76,7 +75,7 @@ public class MyAspectj {
     /**
      * 定义了一个切点, 表示带了@AspectAnnotation注解的才会被增强
      */
-    @Pointcut("@annotation(com.eugene.sumarry.aop.main.annotation.AspectAnnotation)")
+    @Pointcut("@annotation(com.eugene.sumarry.aop.byAnnotation.annotation.AspectAnnotation)")
     public void pointcutAnnotation() {
     }
 
@@ -88,7 +87,7 @@ public class MyAspectj {
     /**
      * 定义参数加了@args的方法才会增强的切点
      */
-    @Pointcut("@args(com.eugene.sumarry.aop.main.annotation.AspectArgs)")
+    @Pointcut("@args(com.eugene.sumarry.aop.byAnnotation.annotation.AspectArgs)")
     public void pointcutArgsAnnotation() {
     }
 
@@ -100,7 +99,7 @@ public class MyAspectj {
     /**
      * 定义在aop环境下添加了注解的类中的所有方法会被增强
      */
-    @Pointcut("@within(com.eugene.sumarry.aop.main.annotation.AspwctWithin)")
+    @Pointcut("@within(com.eugene.sumarry.aop.byAnnotation.annotation.AspectWithin)")
     public void pointcutWithinAnnotation() {
     }
 
@@ -112,7 +111,7 @@ public class MyAspectj {
     /**
      * 定义一个切点, 只对dao包下的第一个参数为long的方法增强
      */
-    @Pointcut("execution(* com.eugene.sumarry.aop.main.dao..*(java.lang.Long, ..))")
+    @Pointcut("execution(* com.eugene.sumarry.aop.byAnnotation.dao..*(java.lang.Long, ..))")
     public void aroundPointcut() {
     }
 

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop.xsd" >
+
+    <!-- 开启CGLIB代理, 才能启动 类的类型增强 -->
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+
+    <aop:config>
+        <!-- 多条件定义的切点语法 execution(* com.eugene.sumarry.aop.byXML.*.*(..)) and target(com.eugene.sumarry.aop.byXML.UserDao) -->
+        <aop:pointcut id="myPointcut" expression="execution(* com.eugene.sumarry.aop.byXML.*.*(..))"/>
+
+        <!-- 切面绑定bean的原因是想用bean中的某个方法作为增强的逻辑 -->
+        <aop:aspect id="myAspect" ref="xmlAdviceBean">
+
+            <!-- 连接点 将切点和通知绑定, 前置通知 -->
+            <aop:before method="before" pointcut-ref="myPointcut"/>
+
+            <!-- 连接点 将切点和通知绑定, 后置通知 -->
+            <aop:after method="after" pointcut-ref="myPointcut"/>
+
+            <!-- xml版对某个类进行增强, 让它强制实现某个接口, 并将配置的默认实现类的方法copy到指定类中 -->
+            <aop:declare-parents
+                    types-matching="com.eugene.sumarry.aop.byXML.StudentDao"
+                    implement-interface="com.eugene.sumarry.aop.byXML.Dao"
+                    default-impl="com.eugene.sumarry.aop.byXML.UserDao"
+            />
+
+            <aop:around method="around" pointcut-ref="myPointcut"/>
+        </aop:aspect>
+    </aop:config>
+
+    <!-- 使用property属性注入 一定要有set方法, 当添加自动装配配置后, 可以省略property注入属性 -->
+    <bean id="xmlAdviceBean" class="com.eugene.sumarry.aop.byXML.XMLAspectBean" autowire="byName"/>
+    <bean id="userDao" class="com.eugene.sumarry.aop.byXML.UserDao"/>
+    <bean id="studentDao" class="com.eugene.sumarry.aop.byXML.StudentDao"/>
+</beans>

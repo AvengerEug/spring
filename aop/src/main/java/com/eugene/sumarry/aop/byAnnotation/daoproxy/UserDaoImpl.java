@@ -1,4 +1,4 @@
-package com.eugene.sumarry.aop.main.daoproxy;
+package com.eugene.sumarry.aop.byAnnotation.daoproxy;
 
 import org.springframework.stereotype.Repository;
 

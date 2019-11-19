@@ -1,10 +1,10 @@
-package com.eugene.sumarry.aop.main.dao;
+package com.eugene.sumarry.aop.byAnnotation.dao;
 
-import com.eugene.sumarry.aop.main.annotation.AspwctWithin;
+import com.eugene.sumarry.aop.byAnnotation.annotation.AspectWithin;
 import org.springframework.stereotype.Repository;
 
 @Repository
-@AspwctWithin
+@AspectWithin
 public class WithinDao {
 
     public void testWithinAnnotation() {

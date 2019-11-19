@@ -1,6 +1,4 @@
-package com.eugene.sumarry.aop.annotation;
-
-import com.eugene.sumarry.aop.annotation.Entity;
+package com.eugene.sumarry.aop.studyannotation;
 
 @Entity("user")
 public class User {
