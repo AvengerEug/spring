@@ -31,7 +31,7 @@
      `executation`, `within`, `args`, `this`, `target`, `@target`, `@args`, `@within`, `@annotation `
      具体可参考[官网](https://docs.spring.io/spring/docs/5.0.9.RELEASE/spring-framework-reference/core.html#aop-pointcuts-designators)
      ```java
-        @Pointcut("execution(* com.eugene.sumarry.aop.main.dao..*.*(..))")
+        @Pointcut("execution(* com.eugene.sumarry.aop.byAnnotation.dao..*.*(..))")
         public void pointcutExecution() {
         }
      ```
@@ -43,16 +43,16 @@
             System.out.println("afterPointcutExecution after advice");
         }
      ```
-  5. 至此, 一个切面就完成了, 这个切面切了`com.eugene.sumarry.aop.main.dao`包及子包下的所有方法。
+  5. 至此, 一个切面就完成了, 这个切面切了`com.eugene.sumarry.aop.byAnnotation.dao`包及子包下的所有方法。
 
 --- 
 ### 切点的表达式
   1. execution: 官网推荐的最常用的方式, 因为其粒度最低, 可以精确到具体的某一个方法
      ```java
         /**
-        * 将com.eugene.sumarry.aop.main.dao包或子包下的任意参数、任意返回值的所有方法作为一个切点
+        * 将com.eugene.sumarry.aop.byAnnotation.dao包或子包下的任意参数、任意返回值的所有方法作为一个切点
         */
-        @Pointcut("execution(* com.eugene.sumarry.aop.main.dao..*.*(..))")
+        @Pointcut("execution(* com.eugene.sumarry.aop.byAnnotation.dao..*.*(..))")
         public void pointcutExecution() {
         }
      ```
@@ -61,7 +61,7 @@
         /**
          * Within粒度比较大, 只能精确包下面的类
          */
-        @Pointcut("within(com.eugene.sumarry.aop.main.dao.*)")
+        @Pointcut("within(com.eugene.sumarry.aop.byAnnotation.dao.*)")
         public void pointcutWithin() {
         }
      ```
@@ -88,7 +88,7 @@
         /**
          * 定义参数加了@args的方法才会增强的切点
          */
-        @Pointcut("@args(com.eugene.sumarry.aop.main.annotation.AspectArgs)")
+        @Pointcut("@args(com.eugene.sumarry.aop.byAnnotation.annotation.AspectArgs)")
         public void pointcutArgsAnnotation() {
         }
      ```
@@ -106,12 +106,12 @@
   7. this: 代理对象的类型与指定类型匹配后才被增强
      ```java
         /**
-         * 表示当生成的代理对象的类型是com.eugene.sumarry.aop.main.daoproxy.UserDaoImpl时,
+         * 表示当生成的代理对象的类型是com.eugene.sumarry.aop.byAnnotation.daoproxy.UserDaoImpl时,
          * 改切点才会生效,
          *
          * 所以采用cglib代理生成的对象才会满足该切点的条件
          */
-        @Pointcut("this(com.eugene.sumarry.aop.main.daoproxy.UserDaoImpl)")
+        @Pointcut("this(com.eugene.sumarry.aop.byAnnotation.daoproxy.UserDaoImpl)")
         public void thisPointcut() {
         }
      ```
@@ -119,10 +119,10 @@
   8. target: 代理的目标对象类型与指定类型匹配后才被增强
      ```java
        /**
-         * 表示当生成的代理对象的目标对象类型是com.eugene.sumarry.aop.main.daoproxy.UserDaoImpl时,
+         * 表示当生成的代理对象的目标对象类型是com.eugene.sumarry.aop.byAnnotation.daoproxy.UserDaoImpl时,
          * 该切点才会生效
          */
-        @Pointcut("target(com.eugene.sumarry.aop.main.daoproxy.UserDaoImpl)")
+        @Pointcut("target(com.eugene.sumarry.aop.byAnnotation.daoproxy.UserDaoImpl)")
         public void targetPointcut() {
         }
      ```
@@ -134,7 +134,7 @@
          *
          * 通知中里面执行的切点可以是对应的函数 也可以是表达式
          */
-        @After("pointcutExecution() && !execution(* com.eugene.sumarry.aop.main.dao..*.*(java.lang.String, java.lang.Integer)))")
+        @After("pointcutExecution() && !execution(* com.eugene.sumarry.aop.byAnnotation.dao..*.*(java.lang.String, java.lang.Integer)))")
         public void conditionAfter() {
             System.out.println("condition after");
         }
@@ -153,23 +153,23 @@
   ```java
     /**
      * 1. @Scope("prototype")表示每次获取的代理对象都是原型的
-     * 2. ("perthis(this(com.eugene.sumarry.aop.main.daoproxy.PrototypeDao))")
-     *    表示当代理对象的类型是com.eugene.sumarry.aop.main.daoproxy.PrototypeDao
+     * 2. ("perthis(this(com.eugene.sumarry.aop.byAnnotation.daoproxy.PrototypeDao))")
+     *    表示当代理对象的类型是com.eugene.sumarry.aop.byAnnotation.daoproxy.PrototypeDao
      *    时, 代理对象是原型的, 其它的为单例的
      * 3. 每一次获取PrototypeDao类型的bean的时候, 代理对象都是最新的.
      * 4. 当目标对象是单例的, 但是代理对象是原型的, 在ProceedingJoinPoint类中获取代理对象和目标对象都是最新的。
      */
     @Component
-    @Aspect("perthis(this(com.eugene.sumarry.aop.main.daoproxy.PrototypeDao))")
+    @Aspect("perthis(this(com.eugene.sumarry.aop.byAnnotation.daoproxy.PrototypeDao))")
     @Scope("prototype")
     public class PrototypeAspect {
     
         /**
-         * 对com.eugene.sumarry.aop.main.daoproxy.PrototypeDao类下的所有方法进行增强,
-         * 并且当代理对象的类型是com.eugene.sumarry.aop.main.daoproxy.PrototypeDao时,
+         * 对com.eugene.sumarry.aop.byAnnotation.daoproxy.PrototypeDao类下的所有方法进行增强,
+         * 并且当代理对象的类型是com.eugene.sumarry.aop.byAnnotation.daoproxy.PrototypeDao时,
          * 代理对象的scope为prototype
          */
-        @Pointcut("execution(* com.eugene.sumarry.aop.main.daoproxy.PrototypeDao.*(..))")
+        @Pointcut("execution(* com.eugene.sumarry.aop.byAnnotation.daoproxy.PrototypeDao.*(..))")
         public void prototypePointcut() {
         }
     
