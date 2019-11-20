@@ -11,9 +11,12 @@ public class Entry {
 
         UserDao userDao = (UserDao) ProxyUtils.newInstance(new UserDaoImpl(), new Class<?>[]{UserDao.class});
         userDao.findList();
+        System.out.println("\n");
 
         StudentDao studentDao = (StudentDao) ProxyUtils.newInstance(new StudentDaoImpl(), new Class<?>[]{StudentDao.class});
         System.out.println(studentDao.findIdList());
+        System.out.println("\n");
         System.out.println(studentDao.getNameById(1111199999L));
+        System.out.println("\n");
     }
 }

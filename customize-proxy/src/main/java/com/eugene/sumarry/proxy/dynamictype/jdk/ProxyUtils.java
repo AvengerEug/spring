@@ -1,6 +1,7 @@
 package com.eugene.sumarry.proxy.dynamictype.jdk;
 
 import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import java.io.File;
@@ -16,6 +17,9 @@ import java.net.URLClassLoader;
 import java.util.Iterator;
 import java.util.Spliterator;
 
+/**
+ * 目前只对实现的第一个接口做增强, 后面的接口类型会忽略掉, 生成的代理对象只会是第一个接口的实现类
+ */
 public class ProxyUtils {
 
     private static final String TAB = "\t";
@@ -111,9 +115,10 @@ public class ProxyUtils {
         try {
             JavaCompiler javaCompiler = ToolProvider.getSystemJavaCompiler();
             StandardJavaFileManager standardJavaFileManager = javaCompiler.getStandardFileManager(null, null, null);
-            Iterable iterable = standardJavaFileManager.getJavaFileObjects(file);
+            Iterable<? extends JavaFileObject> iterable = standardJavaFileManager.getJavaFileObjects(file);
             JavaCompiler.CompilationTask compilationTask = javaCompiler.getTask(null, standardJavaFileManager, null, null, null, iterable);
             compilationTask.call();
+
             standardJavaFileManager.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -149,7 +154,6 @@ public class ProxyUtils {
     }
 
     private static String buildClzContent(Object object, Class<?>[] interfaces) {
-        String targetClzName = object.getClass().getSimpleName();
         // 目前只对实现的第一个接口做增强, 后面的接口类型会忽略掉, 所以代理对象的类型只会是第一个接口的实现类
         Class interfaceClz = interfaces[0];
         String interfaceName = interfaceClz.getSimpleName();
@@ -221,16 +225,16 @@ public class ProxyUtils {
 
     private static void validate(Class<?> clazz, Class<?>[] interfaces) {
         if (interfaces.length == 0) {
-            throw new RuntimeException("接口长度为0");
+            throw new RuntimeException("实现接口数量为0, 至少实现一个接口");
         }
 
         boolean isImplInterface = false;
 
         for (Class<?> anInterface : clazz.getInterfaces()) {
             boolean isBreak = false;
-            for (Class<?> ainterface : interfaces) {
+            for (Class<?> interfaceInner : interfaces) {
 
-                if (ainterface.equals(anInterface)) {
+                if (interfaceInner.equals(anInterface)) {
                     isImplInterface = true;
                     isBreak = true;
                     break;

@@ -12,3 +12,6 @@ This is spring framework study
 
 ## @Configuration注解作用及原理
 [https://github.com/AvengerEug/spring/tree/develop/configration-annotation](https://github.com/AvengerEug/spring/tree/develop/configration-annotation)
+
+## 手写动态代理功能
+[https://github.com/AvengerEug/spring/tree/develop/customize-proxy](https://github.com/AvengerEug/spring/tree/develop/customize-proxy)
