@@ -4,6 +4,9 @@ import com.eugene.sumarry.proxy.StudentDao;
 import com.eugene.sumarry.proxy.StudentDaoImpl;
 import com.eugene.sumarry.proxy.UserDao;
 import com.eugene.sumarry.proxy.UserDaoImpl;
+import com.sun.deploy.net.proxy.ProxyUtils;
+
+import java.net.Proxy;
 
 public class Entry {
 
