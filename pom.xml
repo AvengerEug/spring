@@ -17,6 +17,7 @@
         <module>aop</module>
         <module>customize-proxy</module>
         <module>customize-spring-ioc-aop</module>
+        <module>resourcecode-study</module>
     </modules>
 
     <artifactId>spring</artifactId>
