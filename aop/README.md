@@ -111,7 +111,7 @@
          *
          * 所以采用cglib代理生成的对象才会满足该切点的条件
          */
-        @Pointcut("this(com.eugene.sumarry.aop.byAnnotation.daoproxy.UserDaoImpl)")
+        @Pointcut(impl)
         public void thisPointcut() {
         }
      ```
