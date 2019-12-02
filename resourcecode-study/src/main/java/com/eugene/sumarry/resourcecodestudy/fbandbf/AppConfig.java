@@ -1,4 +1,4 @@
-package com.eugene.sumarry.resourcecodestudy;
+package com.eugene.sumarry.resourcecodestudy.fbandbf;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;

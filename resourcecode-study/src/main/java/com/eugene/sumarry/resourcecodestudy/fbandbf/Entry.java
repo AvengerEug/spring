@@ -1,4 +1,4 @@
-package com.eugene.sumarry.resourcecodestudy;
+package com.eugene.sumarry.resourcecodestudy.fbandbf;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
