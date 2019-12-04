@@ -2,13 +2,22 @@ package com.eugene.sumarry.customize.spring.context.anno;
 
 import com.eugene.sumarry.customize.spring.annotation.ComponentScan;
 import com.eugene.sumarry.customize.spring.annotation.Config;
+import com.eugene.sumarry.customize.spring.beans.BeanFactory;
+import com.eugene.sumarry.customize.spring.beans.DefaultListableBeanFactory;
+import com.eugene.sumarry.customize.spring.beans.RootBeanDefinition;
+import com.eugene.sumarry.customize.spring.util.AnnotationConfigUtils;
 import com.eugene.sumarry.customize.spring.util.Assert;
 
 public class AnnotationConfigApplicationContext extends DefaultAnnotationConfigApplicationContext {
 
-    private AnnotatedBeanDefinitionReader reader = new AnnotatedBeanDefinitionReader();
+    private AnnotatedBeanDefinitionReader reader;
 
     public AnnotationConfigApplicationContext() {
+        reader = new AnnotatedBeanDefinitionReader(this);
+    }
+
+    public DefaultListableBeanFactory getBeanFactory() {
+        return super.beanFactory;
     }
 
     /**
@@ -17,10 +26,18 @@ public class AnnotationConfigApplicationContext extends DefaultAnnotationConfigA
      */
     public void register(Class<?> configClz) {
         initResourcePath(configClz);
+        registerConfig(configClz);
+    }
+
+    private void registerConfig(Class<?> configClz) {
+        RootBeanDefinition beanDefinition = AnnotationConfigUtils.constructConfigBean(configClz);
+        this.getBeanFactory().addBeanDefinition(beanDefinition.getBeanClassName(), beanDefinition);
+        this.getBeanFactory().addBeanDefinitionName(beanDefinition.getBeanClassName());
     }
 
     public AnnotationConfigApplicationContext(Class<?> configClz) {
-        super(configClz);
+        this();
+        this.register(configClz);
         this.refresh();
     }
 
@@ -36,7 +53,6 @@ public class AnnotationConfigApplicationContext extends DefaultAnnotationConfigA
         String pkg = getPkgPath(componentScan);
         reader.doScan(pkg);
         reader.fullInBeanDefinition(null);
-        System.out.println(reader);
     }
 
     private String getPkgPath(ComponentScan componentScan) {

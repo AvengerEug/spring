@@ -4,5 +4,5 @@ import com.eugene.sumarry.customize.spring.beans.BeanDefinition;
 
 public interface BeanNameGenerator {
 
-    String generateBeanName(BeanDefinition var1);
+    String generateBeanName(BeanDefinition beanDefinition);
 }

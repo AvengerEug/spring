@@ -5,8 +5,11 @@ import com.eugene.sumarry.customize.spring.annotation.Lazy;
 import com.eugene.sumarry.customize.spring.annotation.Primary;
 import com.eugene.sumarry.customize.spring.annotation.Scope;
 import com.eugene.sumarry.customize.spring.beans.BeanDefinition;
+import com.eugene.sumarry.customize.spring.beans.BeanDefinitionRegistry;
 import com.eugene.sumarry.customize.spring.beans.anno.AnnotationBeanDefinition;
 import com.eugene.sumarry.customize.spring.context.BeanNameGenerator;
+import com.eugene.sumarry.customize.spring.util.AnnotationConfigUtils;
+import com.eugene.sumarry.customize.spring.util.AnnotationUtils;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -17,10 +20,18 @@ public class AnnotatedBeanDefinitionReader {
 
     private List<Class> allClass = new ArrayList<>();
 
-    private Map<String, BeanDefinition> beanDefinitions = new HashMap<>();
+    private BeanDefinitionRegistry registry;
 
     private BeanNameGenerator beanNameGenerator = new AnnotationBeanNameGenerator();
 
+    public String generateBeanName(BeanDefinition beanDefinition) {
+        return this.beanNameGenerator.generateBeanName(beanDefinition);
+    }
+
+    public AnnotatedBeanDefinitionReader(BeanDefinitionRegistry registry) {
+        this.registry = registry;
+        AnnotationConfigUtils.registerAnnotationConfigProcessors(registry);
+    }
 
     private String processPkgFilePath(String pkg) {
         String result = null;
@@ -70,31 +81,12 @@ public class AnnotatedBeanDefinitionReader {
     public void fullInBeanDefinition(List<Class> classes) {
         classes = classes == null ? allClass : classes;
         for (Class clazz : classes) {
-            BeanDefinition beanDefinition = new AnnotationBeanDefinition();
-            beanDefinition.setBeanClassName(clazz.getName());
-            ((AnnotationBeanDefinition) beanDefinition).setAnnotations(Arrays.asList(clazz.getAnnotations()));
-
-            if (clazz.isAnnotationPresent(Scope.class)) {
-                Scope scope = (Scope) clazz.getAnnotation(Scope.class);
-                beanDefinition.setScope(scope.values());
+            BeanDefinition beanDefinition = AnnotationUtils.fullInBeanDefinition(new AnnotationBeanDefinition(), clazz);
+            beanDefinition.setBeanClassName(this.beanNameGenerator.generateBeanName(beanDefinition));
+            if (((AnnotationBeanDefinition) beanDefinition).getAnnotations().size() > 0) {
+                ((AnnotationConfigApplicationContext)registry).getBeanFactory().addBeanDefinitionName(beanDefinition.getBeanClassName());
+                ((AnnotationConfigApplicationContext)registry).getBeanFactory().addBeanDefinition(beanDefinition.getBeanClassName(), beanDefinition);
             }
-
-            if (clazz.isAnnotationPresent(Lazy.class)) {
-                Lazy lazy = (Lazy) clazz.getAnnotation(Lazy.class);
-                beanDefinition.setLazyInit(lazy.values());
-            }
-
-            if (clazz.isAnnotationPresent(Primary.class)) {
-                Primary primary = (Primary) clazz.getAnnotation(Primary.class);
-                beanDefinition.setPrimary(primary.values());
-            }
-
-            if (clazz.isAnnotationPresent(Description.class)) {
-                Description description = (Description) clazz.getAnnotation(Description.class);
-                beanDefinition.setDescription(description.values());
-            }
-
-            beanDefinitions.put(clazz.getName(), beanDefinition);
         }
     }
 }

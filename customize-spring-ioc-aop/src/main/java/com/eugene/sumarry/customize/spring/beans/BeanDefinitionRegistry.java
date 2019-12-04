@@ -1,4 +1,4 @@
 package com.eugene.sumarry.customize.spring.beans;
 
-public interface BeanFactory {
+public interface BeanDefinitionRegistry {
 }
