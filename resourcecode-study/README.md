@@ -6,6 +6,10 @@
 ### new AnnotationConfigApplicationContext(xxx.class)执行顺序
  ![执行顺序](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/spring%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95-%E5%86%85%E9%83%A8%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B.png)
 
+### Spring上下文结构
+ ![执行顺序](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/spring上下文环境.png)
+
+
 ### AnnotationConfigApplicationContext
   * 注册单个bean(非java config类)
     1. 此时只是将该bean加入到spring容器中去, 走一遍bean的生命周期, 并且这个bean可以不用加任何注解

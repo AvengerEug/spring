@@ -34,6 +34,19 @@ import org.springframework.stereotype.Component;
  *   当一个bean的实例依赖于很多对象时, 可以使用FactoryBean简化步骤.
  *   只需提供一个简单的api即可, eg: mybatis的SqlSessionFactoryBean
  *
+ * org.springframework.beans.factory.support.DefaultListableBeanFactory#preInstantiateSingletons()
+ * 在该方法中指定了FactoryBean的命令会添加一个&
+ * if (isFactoryBean(beanName)) {
+ *      // 此处的FACTORY_BEAN_PREFIX就是&符号
+ * 		Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
+ * 		if (bean instanceof FactoryBean) {
+ * 		    final FactoryBean<?> factory = (FactoryBean<?>) bean;
+ * 		    ..............
+ * 		}
+ * 	}
+ * 	else {
+ * 		getBean(beanName);
+ * 	}
  */
 @Component
 public class TestBeanFactory implements FactoryBean {

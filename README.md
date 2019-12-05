@@ -18,3 +18,6 @@ This is spring framework study
 
 ## 源码学习
 [https://github.com/AvengerEug/spring/tree/develop/resourcecode-study](https://github.com/AvengerEug/spring/tree/develop/resourcecode-study)
+
+## 模拟spring(AOP, IOC, DI, BeanPostProcessor及许多常用注解)
+[https://github.com/AvengerEug/spring/tree/develop/customize-spring-ioc-aop](https://github.com/AvengerEug/spring/tree/develop/customize-spring-ioc-aop)
