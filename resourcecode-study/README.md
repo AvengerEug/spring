@@ -9,6 +9,8 @@
 ### Spring上下文结构
  ![执行顺序](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/spring上下文环境.png)
 
+### BeanDefinition添加至工厂过程
+ ![执行顺序](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/beanDefinition注册过程.png)
 
 ### AnnotationConfigApplicationContext
   * 注册单个bean(非java config类)
