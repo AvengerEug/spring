@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 /**
  * 该处理器会加入到一个列表中, 然后在创建bean的时候统一调用所有的后置处理器
  */
-@Component
 public class MyBeanPostProcessor2 implements BeanPostProcessor, PriorityOrdered {
 
     @Override

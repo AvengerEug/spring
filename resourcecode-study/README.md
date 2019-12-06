@@ -24,9 +24,18 @@
   1. `BeanPostProcessor`后置处理器, spring内置了太多这样的实现(目测是使用订阅者模式实现, 将所有后置处理器存入列表中, 并依次执行)，aop切面就是这么实现的
     * 实现`PriorityOrdered`接口可以控制自定义后置处理器的执行顺序, 目测是根据返回的数字来设置谁先添加到列表中去, `@Order注解不行, 已经测试过了`
     * 疑问: spring自己写的后置处理器执行顺序会被打破么？ spring自己的后置处理器是没有添加跟注册bean有关的注解, 所以它是手动添加的
+    * 在此处被触发PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors的invokeBeanFactoryPostProcessors被触发
+      内部有多个地方调用invokeBeanFactoryPostProcessors方法, 要注意传入的参数来确定调用的是哪一种BeanPostProcessor 
     
   2. `BeanFactoryPostProcessor` 使用jdk1.8的方式来扩展, 表示这个接口可以采用流的方式进行添加, 因为有这个注解`@FunctionalInterface`
-  3. `BeanDefinitionRegistryPostProcessor` 会在`PostProcessorRegistrationDelegate.invokeBeanDefinitionRegistryPostProcessors()`中被触发
+  3. `BeanDefinitionRegistryPostProcessor` 也是在`PostProcessorRegistrationDelegate.invokeBeanDefinitionRegistryPostProcessors()`中的
+     `invokeBeanDefinitionRegistryPostProcessors`被方法
+     => 这种方式的扩展点有两种方式
+        1. 手动添加到AbstractApplicationContext的beanFactoryPostProcessors属性中, 这种方式跟spring内置beanFactoryPostProcessors处理方式一样
+        2. 直接添加@Component注解, 让spring扫描后去处理
+        
+        其实它是继承了BeanFactoryPostProcessor类, 所以BeanFactoryPostProcessor类的扩展也有这两种方式
+    
   
 ### 七. ApplicationContextAwareProcessor 后置处理器作用
   * 首先它实现了`BeanPostProcessor`接口, 在bean初始化的时候被调用, 但因为它是spring内置的bean, 所以是采用手动添加列表的方式, 没有添加注册bean有关的注解
@@ -85,23 +94,50 @@
         }
     ```
     
-#### 关于注册后置处理器的注意点
+### 八. BeanFactoryPostProcessor后置处理器的注意点
   ```text
     org.springframework.context.support.AbstractApplicationContext.refresh
       >org.springframework.context.support.AbstractApplicationContext.postProcessBeanFactory
         >PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, this.getBeanFactoryPostProcessors());
   ```
-  * 在如上的代码调用栈下, 会去调用BeanFactory的后置处理器, 但是这里只能获取到`程序员扩展spring的后置处理器`, 
-    其实就是把它跟spring内置后置处理器一样手动添加到bean工厂去
+  * 在如上的代码调用栈下, 会去调用BeanFactoryPostProcessor的后置处理器, 
+    但是这里只能获取到`程序员扩展spring的后置处理器`(其实就是把它跟spring内置后置处理器一样手动添加到bean工厂去)
     ```text
       这里的程序员扩展spring的后置处理器是什么含义呢？
-        首先要实现一个后置处理器, 要去实现BeanFactoryPostProcessor接口, 其次还要将当前类加到spring容器中去(一般添加@Component注解)。
-        但是要明白, 虽然它实现了这个功能, 但是它并不在this.getBeanFactoryPostProcessors()方法返回的列表中, 所以这样的方式并
-        不是在这里被触发的。
-        那要如何在这里触发呢？
+        首先要实现一个`BeanFactoryPostProcessor`后置处理器, 
+        要去实现BeanFactoryPostProcessor接口, 其次还要将当前
+        类加到spring容器中去(一般添加@Component注解)。但是要明
+        白, 虽然它实现了这个功能, 但是它并不在
+        this.getBeanFactoryPostProcessors()方法返回的列表中
+        (在AbstractApplicationContext类中), 所以这样的方式并
+        不是在这里被触发的。那要如何在这里触发呢？
         步骤如下:
-          1. 同样要实现BeanFactoryPostProcessor接口
-          2. 手动将后置处理器添加至工厂中, 如上下文的后置处理器: beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessor(this))
-             所以需要手动将beanFactory.addBeanPostProcessor(new 实现了BeanPostProcessor接口但没走spring bean流程的实例())
+          1. 创建一个类并实现BeanFactoryPostProcessor接口
+          2. 手动将后置处理器添加至工厂中, 
+             AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+             context.addBeanFactoryPostProcessor(new MyBeanDefinitionRegistryPostProcessor());
+             context.register(SimpleBean.class);
+             context.refresh();
+             // context.refresh()方法, 一定要最后去执行, 
+             // 因为是在refresh方法中对BeanFactoryPostProcessor处理的
     ```
+  * 此时只会触发BeanDefinitionRegistryPostProcessor接口的postProcessBeanDefinitionRegistry方法, 不会触发父类的BeanPostProcessor的方法
+        目测是遍历的时候只调用了postProcessBeanDefinitionRegistry方法
+      * 部分代码如下:
+        
+        ```java
+            // beanFactoryPostProcessors就是手动调用AbstractApplicationContext类中的beanFactoryPostProcessors
+            for (BeanFactoryPostProcessor postProcessor : beanFactoryPostProcessors) {
+                if (postProcessor instanceof BeanDefinitionRegistryPostProcessor) {
+                    BeanDefinitionRegistryPostProcessor registryProcessor =
+                            (BeanDefinitionRegistryPostProcessor) postProcessor;
+                    // 这里只触发了postProcessBeanDefinitionRegistry方法
+                    registryProcessor.postProcessBeanDefinitionRegistry(registry);
+                    registryProcessors.add(registryProcessor);
+                }
+                else {
+                    regularPostProcessors.add(postProcessor);
+                }
+            }
+        ```
   
