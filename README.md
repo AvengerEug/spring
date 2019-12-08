@@ -21,3 +21,6 @@ This is spring framework study
 
 ## 模拟spring(AOP, IOC, DI, BeanPostProcessor及许多常用注解)
 [https://github.com/AvengerEug/spring/tree/develop/customize-spring-ioc-aop](https://github.com/AvengerEug/spring/tree/develop/customize-spring-ioc-aop)
+
+## 使用spring FactoryBean技术模拟mybatis MapperScan注解
+[https://github.com/AvengerEug/spring/tree/develop/implement-mapperscan](https://github.com/AvengerEug/spring/tree/develop/implement-mapperscan)

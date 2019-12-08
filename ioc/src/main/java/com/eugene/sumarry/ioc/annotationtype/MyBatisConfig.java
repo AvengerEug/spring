@@ -12,7 +12,7 @@ public class MyBatisConfig {
 
     /**
      * dataSource表示sqlSessionFactoryBean这个对象依赖于DataSource这个bean
-     * 添加mybatis-spring，mysql-connector-java，mybatis，spring-jdbc
+     * 添加mybatis-spring，mysql-connector-java，beans，spring-jdbc
      * 4个jar包 完成对mybatis的依赖注入
      * @param dataSource
      * @return

@@ -29,7 +29,7 @@
             <version>1.3.2</version>
         </dependency>
 
-        <!-- 使用mybatis类库, mybatis-spring中会引用mybatis类库中的sqlSessionFactory -->
+        <!-- 使用mybatis类库, beans-spring中会引用mybatis类库中的sqlSessionFactory -->
         <dependency>
             <groupId>org.mybatis</groupId>
             <artifactId>mybatis</artifactId>

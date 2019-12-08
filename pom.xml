@@ -18,6 +18,7 @@
         <module>customize-proxy</module>
         <module>customize-spring-ioc-aop</module>
         <module>resourcecode-study</module>
+        <module>implement-mapperscan</module>
     </modules>
 
     <artifactId>spring</artifactId>
