@@ -5,5 +5,6 @@ import com.eugene.sumarry.implementmapperscan.anno.Select;
 public interface UserDao {
 
     @Select("SELECT * FROM user")
-    void findList();
+    String findList();
+
 }
