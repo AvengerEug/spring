@@ -14,6 +14,7 @@ public class AnnotationUtils {
     public static <T extends BeanDefinition> T fullInBeanDefinition(T beanDefinition, Class<?> clazz) {
 
         beanDefinition.setBeanClassName(StringUtils.defaultBeanNameCreator(clazz.getSimpleName()));
+        beanDefinition.setBeanClass(clazz);
 
         if (beanDefinition instanceof AnnotationBeanDefinition) {
             ((AnnotationBeanDefinition) beanDefinition).setAnnotations(Arrays.asList(clazz.getAnnotations()));

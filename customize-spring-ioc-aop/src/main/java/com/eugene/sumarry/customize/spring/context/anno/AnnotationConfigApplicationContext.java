@@ -2,18 +2,23 @@ package com.eugene.sumarry.customize.spring.context.anno;
 
 import com.eugene.sumarry.customize.spring.annotation.ComponentScan;
 import com.eugene.sumarry.customize.spring.annotation.Config;
+import com.eugene.sumarry.customize.spring.beans.AnnotatedGenericBeanDefinition;
 import com.eugene.sumarry.customize.spring.beans.BeanFactory;
 import com.eugene.sumarry.customize.spring.beans.DefaultListableBeanFactory;
 import com.eugene.sumarry.customize.spring.beans.RootBeanDefinition;
 import com.eugene.sumarry.customize.spring.util.AnnotationConfigUtils;
 import com.eugene.sumarry.customize.spring.util.Assert;
+import com.eugene.sumarry.customize.spring.util.PostProcessorRegistrationDelegate;
 
 public class AnnotationConfigApplicationContext extends DefaultAnnotationConfigApplicationContext {
 
     private AnnotatedBeanDefinitionReader reader;
 
+    private ClassPathBeanDefinitionScanned scanned;
+
     public AnnotationConfigApplicationContext() {
         reader = new AnnotatedBeanDefinitionReader(this);
+        scanned = new ClassPathBeanDefinitionScanned(this);
     }
 
     public DefaultListableBeanFactory getBeanFactory() {
@@ -25,12 +30,17 @@ public class AnnotationConfigApplicationContext extends DefaultAnnotationConfigA
      * @param configClz
      */
     public void register(Class<?> configClz) {
-        initResourcePath(configClz);
+        Assert.isTrue(configClz.isAnnotationPresent(Config.class), () -> {
+            return "传入类非java config类";
+        });
+
+        if (!Assert.isTrue(configClz.isAnnotationPresent(ComponentScan.class), true)) return;
+
         registerConfig(configClz);
     }
 
-    private void registerConfig(Class<?> configClz) {
-        RootBeanDefinition beanDefinition = AnnotationConfigUtils.constructConfigBean(configClz);
+    private void registerConfig(Class<?> annotatedConfig) {
+        AnnotatedGenericBeanDefinition beanDefinition = AnnotationConfigUtils.constructConfigBean(annotatedConfig);
         this.getBeanFactory().addBeanDefinition(beanDefinition.getBeanClassName(), beanDefinition);
         this.getBeanFactory().addBeanDefinitionName(beanDefinition.getBeanClassName());
     }
@@ -43,20 +53,16 @@ public class AnnotationConfigApplicationContext extends DefaultAnnotationConfigA
 
     @Override
     public void refresh() {
-        Assert.isTrue(configClz.isAnnotationPresent(Config.class), () -> {
-            return "传入类非java config类";
-        });
-
-        if (!Assert.isTrue(configClz.isAnnotationPresent(ComponentScan.class), true)) return;
-
-        ComponentScan componentScan = configClz.getAnnotation(ComponentScan.class);
-        String pkg = getPkgPath(componentScan);
-        reader.doScan(pkg);
-        reader.fullInBeanDefinition(null);
+        invokeBeanFactoryPostProcessors(this.getBeanFactory());
     }
 
-    private String getPkgPath(ComponentScan componentScan) {
-        return resourcePath + componentScan.value().replace(SPORT, FILE_SEPARATOR);
+    private void invokeBeanFactoryPostProcessors(DefaultListableBeanFactory beanFactory) {
+        PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
+
+        /*ComponentScan componentScan = configClz.getAnnotation(ComponentScan.class);
+        String pkg = getPkgPath(componentScan);
+        reader.doScan(pkg);
+        reader.fullInBeanDefinition(null);*/
     }
 
 

@@ -1,11 +1,9 @@
 package com.eugene.sumarry.customize.spring.util;
 
-import com.eugene.sumarry.customize.spring.beans.BeanDefinition;
-import com.eugene.sumarry.customize.spring.beans.BeanDefinitionRegistry;
-import com.eugene.sumarry.customize.spring.beans.DefaultListableBeanFactory;
-import com.eugene.sumarry.customize.spring.beans.RootBeanDefinition;
+import com.eugene.sumarry.customize.spring.beans.*;
 import com.eugene.sumarry.customize.spring.context.Context;
 import com.eugene.sumarry.customize.spring.context.anno.AnnotationConfigApplicationContext;
+import com.eugene.sumarry.customize.spring.postprocessor.ConfigurationClassPostProcessor;
 
 public class AnnotationConfigUtils {
 
@@ -19,22 +17,22 @@ public class AnnotationConfigUtils {
         DefaultListableBeanFactory beanFactory = unwrapDefaultListableBeanFactory(beanDefinitionRegistry);
 
         if (!beanFactory.containsBeanDefinition(CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME)) {
-            RootBeanDefinition def = new RootBeanDefinition();
+            RootBeanDefinition def = new RootBeanDefinition(ConfigurationClassPostProcessor.class);
             beanFactory.addBeanDefinition(CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME, def);
-            beanFactory.addBeanDefinitionName(CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME);
         }
     }
 
     private static DefaultListableBeanFactory unwrapDefaultListableBeanFactory(BeanDefinitionRegistry registry) {
-        Context context = (Context) registry;
-        if (context instanceof AnnotationConfigApplicationContext) {
-            return ((AnnotationConfigApplicationContext)context).getBeanFactory();
+        if (registry instanceof AnnotationConfigApplicationContext) {
+            return ((AnnotationConfigApplicationContext)registry).getBeanFactory();
+        } else if (registry instanceof DefaultListableBeanFactory) {
+            return ((DefaultListableBeanFactory) registry);
         }
 
         return null;
     }
 
-    public static RootBeanDefinition constructConfigBean(Class<?> clazz) {
-        return AnnotationUtils.fullInBeanDefinition(new RootBeanDefinition(), clazz);
+    public static AnnotatedGenericBeanDefinition constructConfigBean(Class<?> clazz) {
+        return AnnotationUtils.fullInBeanDefinition(new AnnotatedGenericBeanDefinition(), clazz);
     }
 }

@@ -45,4 +45,8 @@ public interface BeanDefinition {
     String setDescription(String description);
 
     String getDescription();
+
+    void setBeanClass(Class<?> beanClass);
+
+    Class<?> getBeanClass();
 }

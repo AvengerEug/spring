@@ -8,6 +8,7 @@ public abstract class CommonBeanDefinition implements BeanDefinition {
     private boolean lazy;
     private boolean primary;
     private String description;
+    private Class<?> beanClass;
 
     @Override
     public void setParentName(String parentName) {
@@ -77,5 +78,15 @@ public abstract class CommonBeanDefinition implements BeanDefinition {
     @Override
     public boolean isPrototype() {
         return SCOPE_PROTOTYPE.equals(getScope());
+    }
+
+    @Override
+    public Class<?> getBeanClass() {
+        return beanClass;
+    }
+
+    @Override
+    public void setBeanClass(Class<?> beanClass) {
+        this.beanClass = beanClass;
     }
 }

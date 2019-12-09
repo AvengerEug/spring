@@ -1,6 +1,5 @@
 package com.eugene.sumarry.resourcecodestudy.annocontext.registersimplebean;
 
-import com.eugene.sumarry.resourcecodestudy.fbandbf.AppConfig;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 public class Test {
