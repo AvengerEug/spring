@@ -39,16 +39,16 @@ public class AnnotationConfigApplicationContext extends DefaultAnnotationConfigA
         registerConfig(configClz);
     }
 
-    private void registerConfig(Class<?> annotatedConfig) {
-        AnnotatedGenericBeanDefinition beanDefinition = AnnotationConfigUtils.constructConfigBean(annotatedConfig);
-        this.getBeanFactory().addBeanDefinition(beanDefinition.getBeanClassName(), beanDefinition);
-        this.getBeanFactory().addBeanDefinitionName(beanDefinition.getBeanClassName());
-    }
-
     public AnnotationConfigApplicationContext(Class<?> configClz) {
         this();
         this.register(configClz);
         this.refresh();
+    }
+
+    private void registerConfig(Class<?> annotatedConfig) {
+        AnnotatedGenericBeanDefinition beanDefinition = AnnotationConfigUtils.constructConfigBean(annotatedConfig);
+        this.getBeanFactory().addBeanDefinition(beanDefinition.getBeanClassName(), beanDefinition);
+        this.getBeanFactory().addBeanDefinitionName(beanDefinition.getBeanClassName());
     }
 
     @Override

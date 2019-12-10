@@ -19,6 +19,7 @@ public class AnnotationConfigUtils {
         if (!beanFactory.containsBeanDefinition(CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME)) {
             RootBeanDefinition def = new RootBeanDefinition(ConfigurationClassPostProcessor.class);
             beanFactory.addBeanDefinition(CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME, def);
+            beanFactory.addBeanDefinitionName(CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME);
         }
     }
 

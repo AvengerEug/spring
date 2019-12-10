@@ -1,5 +1,7 @@
 package com.eugene.sumarry.customize.spring.context.anno;
 
+import com.eugene.sumarry.customize.spring.annotation.Component;
+import com.eugene.sumarry.customize.spring.annotation.Repository;
 import com.eugene.sumarry.customize.spring.beans.BeanDefinition;
 import com.eugene.sumarry.customize.spring.beans.BeanDefinitionRegistry;
 import com.eugene.sumarry.customize.spring.beans.DefaultListableBeanFactory;
@@ -10,6 +12,7 @@ import com.eugene.sumarry.customize.spring.util.AnnotationConfigUtils;
 import com.eugene.sumarry.customize.spring.util.AnnotationUtils;
 
 import java.io.File;
+import java.lang.annotation.Annotation;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -81,17 +84,32 @@ public class ClassPathBeanDefinitionScanned {
     public void fullInBeanDefinition(List<Class> classes) {
         classes = classes == null ? allClass : classes;
         for (Class clazz : classes) {
-            BeanDefinition beanDefinition = AnnotationUtils.fullInBeanDefinition(new ScannedGenericBeanDefinition(), clazz);
-            beanDefinition.setBeanClassName(this.beanNameGenerator.generateBeanName(beanDefinition));
-            if (beanDefinition instanceof AnnotationBeanDefinition) {
-                if (registry instanceof AnnotationConfigApplicationContext) {
-                    ((AnnotationConfigApplicationContext)registry).getBeanFactory().addBeanDefinitionName(beanDefinition.getBeanClassName());
-                    ((AnnotationConfigApplicationContext)registry).getBeanFactory().addBeanDefinition(beanDefinition.getBeanClassName(), beanDefinition);
-                } else if (registry instanceof DefaultListableBeanFactory) {
-                    ((DefaultListableBeanFactory) registry).addBeanDefinitionName(beanDefinition.getBeanClassName());
-                    ((DefaultListableBeanFactory) registry).addBeanDefinition(beanDefinition.getBeanClassName(), beanDefinition);
+            if (isChangedToBeanDefinition(clazz)) {
+                BeanDefinition beanDefinition = AnnotationUtils.fullInBeanDefinition(new ScannedGenericBeanDefinition(), clazz);
+                beanDefinition.setBeanClassName(this.beanNameGenerator.generateBeanName(beanDefinition));
+                if (beanDefinition instanceof AnnotationBeanDefinition) {
+                    if (registry instanceof AnnotationConfigApplicationContext) {
+                        ((AnnotationConfigApplicationContext)registry).getBeanFactory().addBeanDefinitionName(beanDefinition.getBeanClassName());
+                        ((AnnotationConfigApplicationContext)registry).getBeanFactory().addBeanDefinition(beanDefinition.getBeanClassName(), beanDefinition);
+                    } else if (registry instanceof DefaultListableBeanFactory) {
+                        ((DefaultListableBeanFactory) registry).addBeanDefinitionName(beanDefinition.getBeanClassName());
+                        ((DefaultListableBeanFactory) registry).addBeanDefinition(beanDefinition.getBeanClassName(), beanDefinition);
+                    }
                 }
             }
         }
+    }
+
+    public boolean isChangedToBeanDefinition(Class<?> clazz) {
+        Class<? extends Annotation> annotations[] = new Class[] {
+                Repository.class,
+                Component.class
+        };
+
+        for (Class<? extends Annotation> annotation : annotations) {
+            if (clazz.isAnnotationPresent(annotation)) return true;
+        }
+
+        return false;
     }
 }

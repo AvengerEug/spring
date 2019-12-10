@@ -28,6 +28,7 @@ public final class ConfigurationClassPostProcessor implements BeanDefinitionRegi
 
     @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) {
+        System.out.println("执行spring内置实现了PriorityOrdered接口的BeanDefinitionRegistryPostProcessor后置处理器");
         // 1. 循环遍历bean工厂的BeanDefinitionMap
         // 2. 判断是否为配置类
         // 3. 解析配置类

@@ -30,7 +30,6 @@ public abstract class DefaultAnnotationConfigApplicationContext implements Annot
     }
 
     public DefaultAnnotationConfigApplicationContext() {
-        System.out.println("parent");
         this.constructBeanFactory();
     }
 

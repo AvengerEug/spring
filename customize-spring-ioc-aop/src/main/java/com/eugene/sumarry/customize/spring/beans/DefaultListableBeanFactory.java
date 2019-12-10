@@ -1,5 +1,7 @@
 package com.eugene.sumarry.customize.spring.beans;
 
+import com.eugene.sumarry.customize.spring.postprocessor.Ordered;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -52,6 +54,18 @@ public class DefaultListableBeanFactory implements BeanFactory, BeanDefinitionRe
                 }
 
                 if (currentLoopOver) continue;
+            }
+        }
+
+        return beanDefinitions;
+    }
+
+    public List<BeanDefinition> getBeanDefinitionByCondidate(Class<?> postProcessorClz) {
+        List<BeanDefinition> beanDefinitions = new ArrayList<>(256);
+
+        for (BeanDefinition value : beanDefinitionMap.values()) {
+            if (postProcessorClz.isAssignableFrom(value.getBeanClass())) {
+                beanDefinitions.add(value);
             }
         }
 
