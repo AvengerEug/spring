@@ -309,3 +309,19 @@
             }
         ```
   
+### 八. 使用ImportSelector注解和BeanPostProcessor后置处理器模拟aop
+  * 使用该方式可以手动开关aop功能
+  * 具体核心在spring扫描解析类的时候, 会处理Import注解, 在处理Import注解时会处理如下三种情况
+    1. 普通类
+    2. ImportSelector
+       ```text
+         处理ImportSelector类型情况是因为提供了AnnotationMetadata对象, 它可以获取到当前解析类的注解信息(它一定加了@Import注解)
+         此时可以根据AnnotationMetadata对象来获取它拥有什么注解和什么方法, 最后返回一个字符串数组， 这个字符串数组非常重要,
+         内部元素是一个类的全类名, spring会根据这个全类名把这个类也加入到spring容器中去, 所以可以根据解析类是否添加@Proxy注解(这
+         个注解是自定义的)来返回一个数组(数组中包含一个BeanPostProcessor后置处理器, 此时这个后置处理器也会被加到bean工厂中去, 在
+         创建bean的时候会被调用), 在后置处理器中再针对具体的类来创建代理对象, 至此, 完成了自定义的aop. 
+       ```
+    3. ImportBeanDefinitionRegistrar
+    
+    
+    

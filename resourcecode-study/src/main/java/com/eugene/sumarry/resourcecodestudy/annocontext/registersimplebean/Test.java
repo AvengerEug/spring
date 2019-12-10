@@ -10,6 +10,8 @@ public class Test {
         //context.getBeanFactory().addBeanPostProcessor(new MyBeanPostProcessor2());
         context.register(SimpleBean.class);
         context.refresh();
-        System.out.println(context.getBean("userDaoEugene"));
+        //System.out.println(context.getBean("userDaoEugene"));
+        UserDao userDao = context.getBean(UserDao.class);
+        userDao.test();
     }
 }

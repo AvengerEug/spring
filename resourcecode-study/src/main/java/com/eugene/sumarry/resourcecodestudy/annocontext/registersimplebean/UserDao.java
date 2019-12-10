@@ -1,7 +1,6 @@
 package com.eugene.sumarry.resourcecodestudy.annocontext.registersimplebean;
 
-import org.springframework.stereotype.Repository;
+public interface UserDao {
 
-@Repository
-public class UserDao {
+    void test();
 }
