@@ -322,6 +322,34 @@
          创建bean的时候会被调用), 在后置处理器中再针对具体的类来创建代理对象, 至此, 完成了自定义的aop. 
        ```
     3. ImportBeanDefinitionRegistrar
-    
-    
+
+### 九. spring在解析一个@Configuration标记的类时, 如何控制它类不被解析
+  * 手动将该类的beanDefinition标识为配置类(全配置类或者部分配置类都行)
+    eg:
+    ```java
+     context.getBeanDefinition("指定类的名称").setAttribute("org.springframework.context.annotation.ConfigurationClassPostProcessor.configurationClass", "lite");
+     // 或者
+     context.getBeanDefinition("指定类的名称").setAttribute("org.springframework.context.annotation.ConfigurationClassPostProcessor.configurationClass", "full");
+    ```
+  * 原理: 
+    ```java
+        // 下面的configCandidates对象非常重要, 因为spring在解析配置类的时候会校验它是一个什么样(全配置类还是部分配置类)的配置类
+        // 只有spring自己手动标识的配置类才会被解析, 也就是下面的这行代码
+        // ConfigurationClassUtils.checkConfigurationClassCandidate(beanDef, this.metadataReaderFactory)
+        // spring执行了这段代码, 并且该类符合规则, 则返回true, 最后添加到configCandidates数据结构中去
+        // 后面是根据这个集合中的配置类进行解析的,
+        // 所以要实现这样一个功能, 只需要手动将beanDefinition标志为配置类就ok了
+        for (String beanName : candidateNames) {
+            BeanDefinition beanDef = registry.getBeanDefinition(beanName);
+            if (ConfigurationClassUtils.isFullConfigurationClass(beanDef) ||
+                    ConfigurationClassUtils.isLiteConfigurationClass(beanDef)) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Bean definition has already been processed as a configuration class: " + beanDef);
+                }
+            }
+            else if (ConfigurationClassUtils.checkConfigurationClassCandidate(beanDef, this.metadataReaderFactory)) {
+                configCandidates.add(new BeanDefinitionHolder(beanDef, beanName));
+            }
+        }
+    ```
     
