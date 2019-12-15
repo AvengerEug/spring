@@ -180,6 +180,12 @@
             }
      ```
 
+  #### 3.4 processConfigBeanDefinitions执行过程
+   
+   * 主要作用: 循环bean工厂所有的beanDefinition, 处理配置类(全配置类)和非配置类的beanDefinition
+   
+   ![执行顺序](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/processConfigBeanDefinitions执行过程.png)
+
 ### 四. AnnotationConfigApplicationContext
   * 注册单个bean(非java config类)
     1. 此时只是将该bean加入到spring容器中去, 走一遍bean的生命周期, 并且这个bean可以不用加任何注解
@@ -190,12 +196,22 @@
     
 ### 五. spring bean扩展点
   1. `BeanPostProcessor`后置处理器, spring内置了太多这样的实现(目测是使用订阅者模式实现, 将所有后置处理器存入列表中, 并依次执行)，aop切面就是这么实现的
-    * 实现`PriorityOrdered`接口可以控制自定义后置处理器的执行顺序, 目测是根据返回的数字来设置谁先添加到列表中去, `@Order注解不行, 已经测试过了`
-    * 疑问: spring自己写的后置处理器执行顺序会被打破么？ spring自己的后置处理器是没有添加跟注册bean有关的注解, 所以它是手动添加的
-    * 在此处被触发PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors的invokeBeanFactoryPostProcessors被触发
+  
+      * 实现`PriorityOrdered`接口可以控制自定义后置处理器的执行顺序, 目测是根据返回的数字来设置谁先添加到列表中去, `@Order注解不行, 已经测试过了`
+      * 疑问: spring自己写的后置处理器执行顺序会被打破么？ spring自己的后置处理器是没有添加跟注册bean有关的注解, 所以它是手动添加的
+      * 在此处被触发PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors的invokeBeanFactoryPostProcessors被触发
       内部有多个地方调用invokeBeanFactoryPostProcessors方法, 要注意传入的参数来确定调用的是哪一种BeanPostProcessor 
     
   2. `BeanFactoryPostProcessor` 使用jdk1.8的方式来扩展, 表示这个接口可以采用流的方式进行添加, 因为有这个注解`@FunctionalInterface`
+  
+      * spring内置类`ConfigurationClassPostProcessor`就是一个BeanFactoryPostProcessor, 在此后置处理器中对全配置类(在解析配置类时, 
+        若类中存在@Configration注解, 则添加一个属性, key`org.springframework.context.annotation.ConfigurationClassPostProcessor
+        .configurationClass" -> "metadata attribute 'org.springframework.context.annotation.ConfigurationClassPostProcessor.configurationClass'`为, 内容为`full`)进行了代理处理, 具体
+        处理方式如下: 
+
+            1. 给全配置类对应的BeanDefinition添加了一个属性, key为`org.springframework.aop.framework.autoproxy.AutoProxyUtils.preserveTargetClass`内容为`true`
+            2. 生成cglib代理类class, 并覆盖原有BeanDefinition的beanClass属性
+     
   3. `BeanDefinitionRegistryPostProcessor` 也是在`PostProcessorRegistrationDelegate.invokeBeanDefinitionRegistryPostProcessors()`中的
      `invokeBeanDefinitionRegistryPostProcessors`被方法
      => 这种方式的扩展点有两种方式
@@ -262,12 +278,16 @@
         }
     ```
     
-### 七. BeanFactoryPostProcessor后置处理器的注意点
-  ```text
-    org.springframework.context.support.AbstractApplicationContext.refresh
-      >org.springframework.context.support.AbstractApplicationContext.postProcessBeanFactory
-        >PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, this.getBeanFactoryPostProcessors());
-  ```
+### 七. 第一次调用BeanFactoryPostProcessor后置处理器的注意点
+
+  * 调用链如下：
+  
+    ```java
+      org.springframework.context.support.AbstractApplicationContext.refresh
+        >org.springframework.context.support.AbstractApplicationContext.invokeBeanFactoryPostProcessors
+          >PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, this.getBeanFactoryPostProcessors());
+    ```
+  
   * 在如上的代码调用栈下, 会去调用BeanFactoryPostProcessor的后置处理器, 
     但是这里只能获取到`程序员扩展spring的后置处理器`(其实就是把它跟spring内置后置处理器一样手动添加到bean工厂去)
     ```text
@@ -314,16 +334,16 @@
   * 具体核心在spring扫描解析类的时候, 会处理Import注解, 在处理Import注解时会处理如下三种情况
     1. 普通类
     2. ImportSelector
-       ```text
+       ```markdown
          处理ImportSelector类型情况是因为提供了AnnotationMetadata对象, 它可以获取到当前解析类的注解信息(它一定加了@Import注解)
-         此时可以根据AnnotationMetadata对象来获取它拥有什么注解和什么方法, 最后返回一个字符串数组， 这个字符串数组非常重要,
-         内部元素是一个类的全类名, spring会根据这个全类名把这个类也加入到spring容器中去, 所以可以根据解析类是否添加@Proxy注解(这
-         个注解是自定义的)来返回一个数组(数组中包含一个BeanPostProcessor后置处理器, 此时这个后置处理器也会被加到bean工厂中去, 在
-         创建bean的时候会被调用), 在后置处理器中再针对具体的类来创建代理对象, 至此, 完成了自定义的aop. 
+         此时可以根据AnnotationMetadata对象来获取它拥有什么注解和什么方法。 重写的方法最后返回一个字符串数组， 这个字符串数组非常
+         重要,内部元素是一个类的全类名, spring会根据这个全类名把这个类也加入到spring容器中去, 所以可以根据解析类是否添加@EnableProxy注
+         解(这个注解是自定义的, 具体可以参考此类[MyImportSelector.java](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/src/main/java/com/eugene/sumarry/resourcecodestudy/annocontext/registersimplebean/MyImportSelector.java))来返回一个数组(数组中包含一个BeanPostProcessor后置处理器, 此时这个后置处理器也会被加到bean工厂中去
+         , 在创建bean的时候会被调用), 在后置处理器中再针对具体的类来创建代理对象, 至此, 完成了自定义的aop. 
        ```
     3. ImportBeanDefinitionRegistrar
 
-### 九. spring在解析一个@Configuration标记的类时, 如何控制它类不被解析
+### 九. spring在解析一个@Configuration标记的类时, 如何控制它不被解析
   * 手动将该类的beanDefinition标识为配置类(全配置类或者部分配置类都行)
     eg:
     ```java
@@ -338,7 +358,8 @@
         // ConfigurationClassUtils.checkConfigurationClassCandidate(beanDef, this.metadataReaderFactory)
         // spring执行了这段代码, 并且该类符合规则, 则返回true, 最后添加到configCandidates数据结构中去
         // 后面是根据这个集合中的配置类进行解析的,
-        // 所以要实现这样一个功能, 只需要手动将beanDefinition标志为配置类就ok了
+        // 所以要实现这样一个功能(spring在解析一个@Configuration标记的类时, 如何控制它不被解析), 只需要在类被解析之前手动
+        // 将beanDefinition标志为配置类就ok了
         for (String beanName : candidateNames) {
             BeanDefinition beanDef = registry.getBeanDefinition(beanName);
             if (ConfigurationClassUtils.isFullConfigurationClass(beanDef) ||
