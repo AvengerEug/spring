@@ -19,8 +19,11 @@ public class MyImportBeanDefinitionRegistrar implements ImportBeanDefinitionRegi
         // 该后置处理器会被调用多次
         if (!registry.containsBeanDefinition("userDao")) {
             BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(UserDaoFactoryBean.class);
-            builder.getBeanDefinition().getConstructorArgumentValues().addGenericArgumentValue(UserDao.class.getName());
 
+            // 这行代码是为了在spring实例化bean的时候 调用它的一个带参的构造方法, 并将参数值传进去
+            // 然后当前实例化的bean是一个FactoryBean, 所以我们可以在它的getObject方法中返回我们传入参数的代理对象出去
+            // mybatis就是这样实现的: 调用地址org.mybatis.spring.mapper.ClassPathMapperScanner.processBeanDefinitions
+            builder.getBeanDefinition().getConstructorArgumentValues().addGenericArgumentValue(UserDao.class.getName());
             registry.registerBeanDefinition("userDao", builder.getBeanDefinition());
         }
     }

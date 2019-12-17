@@ -19,6 +19,7 @@
         <module>customize-spring-ioc-aop</module>
         <module>resourcecode-study</module>
         <module>implement-mapperscan</module>
+        <module>mybatis</module>
     </modules>
 
     <artifactId>spring</artifactId>
