@@ -1,11 +1,20 @@
 package com.eugene.sumarry.mybatis;
 
+import com.eugene.sumarry.mybatis.service.UserService;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.AnnotatedGenericBeanDefinition;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.sql.DataSource;
@@ -26,13 +35,22 @@ public class AppConfig {
     }
 
     @Bean
+    public DataSourceTransactionManager dataSourceTransactionManager() {
+        DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager();
+        dataSourceTransactionManager.setDataSource(dataSource());
+        return dataSourceTransactionManager;
+    }
+
+    @Bean
     public SqlSessionFactoryBean sqlSessionFactoryBean() throws Exception {
         SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
         sqlSessionFactoryBean.setDataSource(dataSource());
+        sqlSessionFactoryBean.setTypeAliasesPackage("com.eugene.sumarry.mybatis.model");
+
         // 此处是参考spring解析@ComponentScan的方式搭建的, 指定了正则的resource,
         // org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider.scanCandidateComponents
-        // 同时扫描的配置文件一定要和接口名一致, 否则映射不了
-        sqlSessionFactoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath:mapper/*.xml"));
+        // 扫描的配置文件名称没有要求, 唯一要求是: 对应的mapper文件的命名空间要和对应的dao类的全类名一致, 它是按照这样的规则来对应的
+        sqlSessionFactoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath:mapper/**/*.xml"));
         return sqlSessionFactoryBean;
     }
 }

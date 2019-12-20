@@ -1,11 +1,10 @@
 package com.eugene.sumarry.mybatis.dao;
 
 import com.eugene.sumarry.mybatis.model.User;
-import org.apache.ibatis.annotations.CacheNamespace;
 
 import java.util.List;
 
-public interface UserDao {
+public interface UserDao1 {
 
     List<User> list();
 

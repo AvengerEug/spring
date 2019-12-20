@@ -3,7 +3,10 @@
 
 <mapper namespace="com.eugene.sumarry.mybatis.dao.UserDao">
 
-    <resultMap type="com.eugene.sumarry.mybatis.model.User" id="userMap">
+    <!-- 有xml的话, 在dao上添加@CacheNamespace注解会无效, 需要在这里添加 <cache /> 标签 -->
+    <cache />
+
+    <resultMap type="User" id="userMap">
         <id column="user_id" property="userId"/>
         <result column="user_name" property="userName"/>
         <result column="password" property="password"/>
@@ -18,4 +21,9 @@
         <include refid="fields"/>
         FROM user
     </select>
+
+    <update id="update" parameterType="User" >
+        UPDATE user SET user_name = 'eugene1' WHERE user_id = 1
+    </update>
+
 </mapper>
