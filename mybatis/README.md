@@ -29,3 +29,7 @@
 ### @MapperScan注解执行流程
 
 ![@MapperScan注解执行流程](https://github.com/AvengerEug/spring/blob/develop/mybatis/@MapperScan注解执行流程.png)
+
+### mybatis环境初始化流程
+
+![@mybatis环境初始化流程](https://github.com/AvengerEug/spring/blob/develop/mybatis/mybatis环境初始化流程.png)

@@ -2,17 +2,7 @@ package com.eugene.sumarry.mybatis.service;
 
 import com.eugene.sumarry.mybatis.dao.UserDao;
 import com.eugene.sumarry.mybatis.dao.UserDao1;
-import org.apache.ibatis.annotations.CacheNamespace;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
-import org.springframework.context.annotation.ScannedGenericBeanDefinition;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService {
