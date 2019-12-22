@@ -32,6 +32,9 @@ import org.springframework.stereotype.Component;
  *
  * 设置beanDefinition的AutowireMode属性为AbstractBeanDefinition.AUTOWIRE_BY_TYPE很重要,
  * 因为在mybatis源码中构建MapperFactoryBean中就用到了它
+ *
+ * spring中默认采取的自动装配是AutowireCapableBeanFactory.AUTOWIRE_NO,
+ * 只不过我们加了@Autowired注解后, 变成了AbstractBeanDefinition.AUTOWIRE_BY_TYPE
  */
 @Component
 public class UserServiceAutowiredByTypeBeanDefinitionRegisterPostProcessor implements BeanDefinitionRegistryPostProcessor {
