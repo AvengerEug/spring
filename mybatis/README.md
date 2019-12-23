@@ -15,13 +15,12 @@
     
     所以, 如果有多个命令空间会对同一张表做操作, 那么建议别选mybatis的二级缓存, 可以使用第三方的eg: redis
     
-## mybatis中解析mapper的方式
+## mybatis中添加mapper的几种方式
   1. class
      org.apache.ibatis.session.Configuration.addMapper(Class<T> type)
   2. package
      org.apache.ibatis.session.Configuration.addMappers(String packageName)
   3. url
-     
   4. path
   
 ## mybatis原理执行流程图

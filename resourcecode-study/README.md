@@ -387,3 +387,36 @@
     | ImportBeanDefinitionRegistrar | 在解析@Import注解时, 会解析类型为ImportBeanDefinitionRegistrar类型导入类 | 能获取BeanDefinitionRegistry, 可以手动的添加和修改beanDefinition | 能获取导入类的`AnnotationMetadata`对象以及beanDefinition注册器`BeanDefinitionRegistry` | mybatis的@MapperScan注解功能 |
     
 ### 十. spring自动装配注意事项, 以及spring默认不装配的几种类型
+
+  * spring自动装配原则
+    
+    * 获取当前类的beanDefinition并拿到MutablePropertyValues对象中所有手动添加的property,
+      为了让spring不自动装配, eg: 我们自己要设置它
+
+    * 获取当前类(包含父类以及超类Object)中所有的get、set方法. spring会
+       将方法名前面的set、get去掉后再将第一个字母小写得到的值
+       (eg: getTest(); 最终会得到test)作为自动装配的候选者).
+    * 装配的条件:
+        
+        | 对应spring源码 | 含义 | 判断顺序 |
+        | -- | -- | -- |
+        | pd.getWriteMethod() | 验证属性是否有set方法, pd为属性的描述器 | 1 |
+        | !isExcludedFromDependencyCheck(pd) | 不在忽略自动装配的条件内(就是在spring refresh</br>方法中的prepareBeanFactory方法中添加的忽略自动装配的几种类型) | 2 |
+        | !pvs.contains(pd.getName()) | 不在手动添加到beanDefinition的</br>MutablePropertyValues对象中的属性.</br>pvs为获取当前要自动装配类的beanDefinition的</br>MutablePropertyValues对象中存</br>储手动添加property的属性 | 3 |
+        | !BeanUtils.isSimpleProperty(pd.getPropertyType()) | 不是一个简单属性, 见下面的源码 | 4 |
+    
+    * isSimpleProperty, 简单属性的源码:
+
+      ```java
+        // 这里只是截图了这个方法的源码
+        public static boolean isSimpleValueType(Class<?> clazz) {
+          return (ClassUtils.isPrimitiveOrWrapper(clazz) ||
+              Enum.class.isAssignableFrom(clazz) ||
+              CharSequence.class.isAssignableFrom(clazz) ||
+              Number.class.isAssignableFrom(clazz) ||
+              Date.class.isAssignableFrom(clazz) ||
+              URI.class == clazz || URL.class == clazz ||
+              Locale.class == clazz || Class.class == clazz);
+        }
+      ```
+       
