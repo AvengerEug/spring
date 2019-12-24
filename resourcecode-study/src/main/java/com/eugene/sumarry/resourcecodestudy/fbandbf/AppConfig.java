@@ -4,6 +4,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ComponentScan("com.eugene.sumarry.resourcecodestudy")
+@ComponentScan("com.eugene.sumarry.resourcecodestudy.fbandbf")
 public class AppConfig {
 }

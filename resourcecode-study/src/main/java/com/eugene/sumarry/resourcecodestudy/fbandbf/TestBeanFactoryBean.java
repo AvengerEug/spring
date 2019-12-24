@@ -49,7 +49,7 @@ import org.springframework.stereotype.Component;
  * 	}
  */
 @Component
-public class TestBeanFactory implements FactoryBean {
+public class TestBeanFactoryBean implements FactoryBean {
 
     @Override
     public Object getObject() throws Exception {

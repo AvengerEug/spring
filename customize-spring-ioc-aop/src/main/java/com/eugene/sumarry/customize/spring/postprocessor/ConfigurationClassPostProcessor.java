@@ -26,6 +26,14 @@ public final class ConfigurationClassPostProcessor implements BeanDefinitionRegi
         resourcePath = resourcePath + componentScan.value().replace(SPORT, FILE_SEPARATOR);
     }
 
+    /**
+     * 模拟spring解析配置类功能,
+     * 此处并没有和spring做的一样, spring还会区分全配置类、部分配置类
+     * 然后配置类中还要识别@Import的三种(普通类、ImportSelector、ImportBeanDefinitionRegistrar)情况、
+     * @Bean、@ImportResource等等, 这里就模拟简单点的, 只解析@ComponentScan中的类
+     * 并把它添加到bean工厂中
+     * @param registry
+     */
     @Override
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) {
         System.out.println("执行spring内置实现了PriorityOrdered接口的BeanDefinitionRegistryPostProcessor后置处理器");
