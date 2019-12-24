@@ -419,4 +419,33 @@
               Locale.class == clazz || Class.class == clazz);
         }
       ```
-       
+
+### 十一. 获取FactoryBean实例与它维护的bean实例规则
+
+* 说这个规则之前, 首先先了解下FactoryBean的创建规则
+
+  * 因为FactoryBean也是一个bean, 所以肯定在`ConfigurationClassPostProcessor`后置处理器执行时就已经被
+    扫描出来并注册到bean工厂了, 所以在`finishBeanFactoryInitialization`方法中会对它进行初始化, 不管是
+    因为某个类依赖了它而被初始化还是循环创建bean时的初始化, 都要走createBean流程
+  * 这里先说一下遍历所有beanDefinition, 无类依赖它的情况
+    ```java
+        if (isFactoryBean(beanName)) {
+            Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
+            //。。。。。。 省略后面的代码
+        }
+    ```
+    由上可知, 创建FactoryBean的时候会给默认的beanName加上一个`&`符号, 假设这个FactoryBean的名字被spring
+    默认扫描出来后变成了testFactoryBean, 那么此时它会变成`&testFactoryBean`,
+    但是在**getBean(FACTORY_BEAN_PREFIX + beanName)**方法内部却又对他进行了拆解(将前面的&去掉)并赋值给
+    新变量(beanName), 最终整个创建bean的流程就是以无`&`符号的名字取创建, 所以最终会在bean工厂中创建一个名
+    为`testFactoryBean`的bean
+    
+    当我们调用spring获取bean的api时(eg: context.getBean("&testFactoryBean")或context.getBean("&test
+    FactoryBean"))时, 它最终都是根据`testFactoryBean`来获取bean, 但是每次都会携带原来传入的bean名称和处理
+    过的bean名称，分别赋值为name和beanName, 所以它最终是根据beanName去获取bean的, 但最终它拿到bean后会校验
+    这个bean是否为FactoryBean和这两个名字是否一致(name和beanName), 若拿出来的bean是FactoryBean, 并且两个
+    名字一致, 那么就认为用户要取的是FactoryBean。若拿出来的bean是FactoryBean, 但name为`&testFactoryBean`
+    那么会返回testFactoryBean的getObject方法的对象。 如果是第二次获取FactoryBean对象的话, 那么就会从一个名
+    叫`factoryBeanObjectCache`的map中去取, 因为在第一获取的时候, 会将这个对象放在这个map中, key为FactoryBean
+    的名称, 与spring容器中存储FactoryBean的名称一致, 只不过他们是存在不同的数据结构中
+  
