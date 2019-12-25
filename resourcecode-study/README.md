@@ -449,3 +449,76 @@
     叫`factoryBeanObjectCache`的map中去取, 因为在第一获取的时候, 会将这个对象放在这个map中, key为FactoryBean
     的名称, 与spring容器中存储FactoryBean的名称一致, 只不过他们是存在不同的数据结构中
   
+
+### 十二. spring事件驱动原理
+
+* 首先先总结下如何使用spring的事件驱动
+  1. 新建事件源类。继承**ApplicationEvent**类, 并重写带参构造方法
+     ```java
+        public class MyApplicationEvent extends ApplicationEvent {
+            // 带参构造方法中的参数就是可以为事件添加一些参数, 即
+            // 自定义一些事件
+            public MyApplicationEvent(Object source) {
+                super(source);
+            }
+        }
+     ```
+     
+  2. 新建事件监听器。
+     ```java
+        // 1. 需要添加@Component注解, 让监听者作为spring的一个bean
+        // 2. 其次, 要实现ApplicationListener接口, 泛型为上述定义的事件源(MyApplicationEvent)
+        @Component
+        public class MyApplicationListener implements ApplicationListener<MyApplicationEvent> {
+        
+            @Override
+            public void onApplicationEvent(MyApplicationEvent event) {
+                System.out.println("监听者, " + event);
+            }
+        }
+     ```
+  
+  3. 获取spring ApplicationEventPublisher对象
+     ```java
+        // 新建了一个bean来维护上下文对象
+        @Component
+        public class ApplicationContextHolder implements ApplicationContextAware {
+        
+            private static ApplicationContext applicationContext;
+        
+            @Override
+            public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+                applicationContext = applicationContext;
+            }
+       
+            public static ApplicationContext getApplicationContext() {
+                return applicationContext;
+            }
+        }
+     ```
+  
+  4. 触发事件
+     ```java
+        // 拿到spring上下文发布事件
+        // spring上下文如何拿到？ spring上下文是指实现了ApplicationContext接口的类
+        // 在以java config技术开启的spring应用程序中, 可以用AnnotationConfigApplicationContext的实例, 第三步可以忽略
+        // 若是spring web应用程序, eg: spring mvc, 则可以新增一个bean并实现ApplicationContextAware接口, eg: 第三步
+        ApplicationContextHolder.getApplicationContext().publishEvent(new MyApplicationEvent(new String[] {
+           "1", "2"
+        }))
+     ```
+     
+* 原理
+  1. spring在执行refresh方法中的prepareBeanFactory方法时, 会新增spring内置的ApplicationContextAwareProcessor后置处理器
+  2. spring在执行refresh方法中的registerBeanPostProcessors方法时, 会新增ApplicationListener bean的后置处理器
+     `ApplicationListenerDetector`, 主要作用就是将他添加到上下文对象的存放ApplicationListener的Set集合中
+  3. spring在执行refresh方法中的initApplicationEventMulticaster方法时, 会初始化spring的事件驱动对象
+     `ApplicationEventMulticaster`, 它是通过beanFactory创建出来的, 所以走了spring的bean生命周期
+  4. spring在执行refresh方法中的registerListeners方法时, 主要是将扫描出来的listener的beanName添加到第三步
+     产生的`ApplicationEventMulticaster`中
+  5. spring在执行refresh方法中的finishBeanFactoryInitialization, 开始初始化所有的bean, 在开始创建MyApplicationListener
+     bean时, 创建完后会调用第2步注册的后置处理器.
+  6. 发布事件, 根据事件本身对象拿到监听者, 然后调用监听者的方法
+  
+* 小结
+  * 这里用到了很多集合来存储监听者对象, 用了广播机制, 当一个事件发布的时候, 要找到所有这个事件的监听者, 然后再统一调用
