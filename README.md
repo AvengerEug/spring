@@ -16,7 +16,7 @@ This is spring framework study
 ## 五、手写动态代理功能
 [https://github.com/AvengerEug/spring/tree/develop/customize-proxy](https://github.com/AvengerEug/spring/tree/develop/customize-proxy)
 
-## 六源码学习
+## 六、源码学习
 [https://github.com/AvengerEug/spring/tree/develop/resourcecode-study](https://github.com/AvengerEug/spring/tree/develop/resourcecode-study)
 
 ## 七、模拟spring(AOP, IOC, DI, BeanPostProcessor及许多常用注解)

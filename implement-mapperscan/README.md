@@ -1,17 +1,24 @@
 # 使用spring ImportBeanDefinitionRegistrar和FactoryBean知识模拟mybatis @MapperScan注解
 
-## 背景
+## 一、背景
+
+### 1.1 背景
+
   * @MapperScan功能: 指定添加了`@Mapper`注解的类的路径, 能够不写实现类就调用接口的方法
+  
+### 1.2 执行原理
 
-## 分析与解决方案
+[@MapperScan注解执行流程.png](https://github.com/AvengerEug/spring/blob/develop/implement-mapperscan/@MapperScan注解执行流程.png)
 
-### 分析
+## 二、分析与解决方案
+
+### 2.1 分析
   1. java 中接口是不能直接调用方法的, 得有实现类才行, 但是Mybatis可以不提供实现类也能调用接口中的方法,
      那要如何直接调用接口中的方法？ 代理
   2. 因为service层中会依赖与dao层, 所以我们需要将这个代理对象添加到spring容器中去, 让spring完成自动装配
      如何将创建出来的代理对象添加到spring容器中去？ => 如何手动的将一个类添加到spring容器中去？
      
-### 解决方案
+### 2.2 解决方案
   * 针对第一个问题: 很明显, 可以使用动态代理模式动态产生一个对象
   * 针对第二个问题: 
     1. **ImportSelector**
@@ -30,7 +37,7 @@
             的后置处理器没有提供这样的api
        * => [对应类https://github.com/AvengerEug/spring/tree/develop/implement-mapperscan/src/main/java/com/eugene/sumarry/implementmapperscan/beans/MapperScanBeanDefinitionRegistryPostProcessor](https://github.com/AvengerEug/spring/tree/develop/implement-mapperscan/src/main/java/com/eugene/sumarry/implementmapperscan/beans/MapperScanBeanDefinitionRegistryPostProcessor)
     
-### 总结
+## 三、总结
   * 利用BeanDefinitionRegistryPostProcessor或ImportBeanDefinitionRegistrar接口来实现手动添加BeanDefinition至bean工厂
   * 利用spring的`FactoryBean`的`getObject`方法来实现将接口类型(无实现类)的代理对象添加到spring中去的, 因为FactoryBean的  
     getObject方法返回的是自己想要的对象
