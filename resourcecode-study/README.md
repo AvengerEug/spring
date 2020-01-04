@@ -522,3 +522,54 @@
   
 * 小结
   * 这里用到了很多集合来存储监听者对象, 用了广播机制, 当一个事件发布的时候, 要找到所有这个事件的监听者, 然后再统一调用
+  
+
+### 十三. @Bean与@Configuration注解
+
+  * 因为`ConfigurationClassPostProcessor`类的特殊身份(是`BeanDefinitionRegistryPostProcessor`和`BeanFactoryPostProcessor`),
+    它处于`BeanFactoryPostProcessor`身份时会对@Configuration注解标识的类进行cglib代理, 为了防止如下情况下:testBeanAnnotation1
+    方法调用两次时, TestBeanAnnotation1类会被创建出两个对象。
+    
+    ```java
+        @Configuration
+        @ComponentScan("com.eugene.sumarry.resourcecodestudy.annocontext.registersimplebean")
+        public class AppConfig {
+
+            @Bean
+            public TestBeanAnnotation1 testBeanAnnotation1() {
+                return new TestBeanAnnotation1();
+            }
+        
+            @Bean
+            public TestBeanAnnotation2 testBeanAnnotation2() {
+                testBeanAnnotation();
+                testBeanAnnotation();
+                return new TestBeanAnnotation2();
+            }
+        
+        }
+    ```
+  
+  * 当代码改动成这样, testBeanAnnotation1方法变成静态的, 那么就会创建成两个对象, 原因是在处理@Bean的方法时,
+    会对要返回出来的bean添加FactoryMethod方法, 所以在创建这个bean的时候发现它有FactoryMethod方法, 最终会
+    将FactoryMethod的返回值作为这个bean的创建结果。
+    
+    ```java
+        @Configuration
+        @ComponentScan("com.eugene.sumarry.resourcecodestudy.annocontext.registersimplebean")
+        public class AppConfig {
+
+            @Bean
+            public static TestBeanAnnotation1 testBeanAnnotation1() {
+                return new TestBeanAnnotation1();
+            }
+        
+            @Bean
+            public TestBeanAnnotation2 testBeanAnnotation2() {
+                testBeanAnnotation();
+                testBeanAnnotation();
+                return new TestBeanAnnotation2();
+            }
+        
+        }
+    ```

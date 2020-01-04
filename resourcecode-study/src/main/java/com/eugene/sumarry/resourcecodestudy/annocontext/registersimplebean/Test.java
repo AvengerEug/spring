@@ -8,7 +8,7 @@ public class Test {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
         context.addBeanFactoryPostProcessor(new MyBeanDefinitionRegistryPostProcessor());
         //context.getBeanFactory().addBeanPostProcessor(new MyBeanPostProcessor2());
-        context.register(SimpleBean.class);
+        context.register(AppConfig.class);
         context.refresh();
         //System.out.println(context.getBean("userDaoEugene"));
         UserDao userDao = context.getBean(UserDao.class);
