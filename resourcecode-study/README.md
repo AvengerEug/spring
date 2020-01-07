@@ -383,7 +383,7 @@
     | BeanPostProcessor | bean创建后, 在将bean放入</br>bean工厂单例容器的`前后执行` | 能干扰创建bean的结果 | 提供了bean的名字和bean的对象 | @PostConstruct注解、AOP |
     | BeanFactoryPostProcessor | 在调用后置处理器(spring内置的、手动添加的、加了注解的)处执行 | 扩展spring | 提供了bean工厂对象 | spring内置类`ConfigurationClassPostProcessor`</br>为`@Configuration`注解生成cglib代理对象|
     | BeanDefinitionRegistryPostProcessor | 在调用后置处理器(spring内置的、手动添加的、加了注解的)处执行 | 扩展spring | 提供了BeanDefinitionRegistry类型的对象, 其实也是bean工厂 | spring内置类`ConfigurationClassPostProcessor` 加载所有包含`@Component`注解的类, 以及加载配置类(全配置@Configuration和部分配置@Component, @ComponentScan, @Import, @ImportResource, @Bean) |
-    | ImportSelector | 在解析@Import注解时, 会解析类型为ImportSelector类型导入类 | 解析重写接口selectImports方法的返回值(是一个的全类名组成的字符串数组)并添加至bean工厂 | 返回字符串数组(内部为类的类的全类名), 并将他们加到bean工厂中 | 能获取被@Import标注的类的`AnnotationMetadata`对象, 可以根据该对象的一些标志来导入一些后置处理器进而影响某个bean的创建 | 未想到 |
+    | ImportSelector | 在解析@Import注解时, 会解析类型为ImportSelector类型导入类 | 解析重写接口selectImports方法的返回值(是一个的全类名组成的字符串数组), 并将它们当做@Import注解导入的类再走一遍@Import的流程, 最终普通类会被添加到配置类解析器的存放配置类的数据结构中 | 返回字符串数组(内部为类的类的全类名), 并将他们加到bean工厂中 | 能获取被@Import标注的类的`AnnotationMetadata`对象, 可以根据该对象的一些标志来导入一些后置处理器进而影响某个bean的创建 | 未想到 |
     | ImportBeanDefinitionRegistrar | 在解析@Import注解时, 会解析类型为ImportBeanDefinitionRegistrar类型导入类 | 能获取BeanDefinitionRegistry, 可以手动的添加和修改beanDefinition | 能获取导入类的`AnnotationMetadata`对象以及beanDefinition注册器`BeanDefinitionRegistry` | mybatis的@MapperScan注解功能 |
     
 ### 十. spring自动装配注意事项, 以及spring默认不装配的几种类型
