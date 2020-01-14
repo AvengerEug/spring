@@ -33,8 +33,10 @@ public class AppConfig {
 
         // 此处是参考spring解析@ComponentScan的方式搭建的, 指定了正则的resource,
         // org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider.scanCandidateComponents
-        // 扫描的配置文件名称没有要求, 唯一要求是: 对应的mapper文件的命名空间要和对应的dao类的全类名一致, 它是按照这样的规则来对应的
-        //sqlSessionFactoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath:mapper/**/*.xml"));
+
+        // 扫描的配置文件名称没有要求, 唯一要求是:
+        //   对应的mapper文件的命名空间要和对应的dao类的全类名一致, 它是按照这样的规则来对应的
+        sqlSessionFactoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath:mapper/**/*.xml"));
         sqlSessionFactoryBean.setFailFast(true);
         return sqlSessionFactoryBean;
     }

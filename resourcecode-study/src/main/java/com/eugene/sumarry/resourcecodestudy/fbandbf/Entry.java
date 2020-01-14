@@ -7,8 +7,8 @@ public class Entry {
     public static void main(String[] args) {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
         // 返回false, 因为testBeanFactory类型为TestBean
-        context.getBean("testBeanFactoryBean");
-        context.getBean("testBeanFactoryBean");
+        System.out.println(context.getBean("&testBeanFactoryBean"));
+        System.out.println(context.getBean("testBeanFactoryBean"));
 
         // 返回false, 不知道为何不是接口类型, 需要确认这个类是否被增强了
         // System.out.println(context.getBean("testBeanFactoryBean") instanceof BeanFactory);
