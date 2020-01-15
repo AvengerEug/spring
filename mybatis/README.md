@@ -48,9 +48,9 @@
   主要是这个判断`mbd.hasConstructorArgumentValues()`, mybatis针对每个
   MapperFactoryBean都添加了一个构造方法会用上的值(dao层接口的class字符串)
   , 源码为如下
-  ```java
-    definition.getConstructorArgumentValues().addGenericArgumentValue(definition.getBeanClassName()); // issue #59
-```
+    ```java
+      definition.getConstructorArgumentValues().addGenericArgumentValue(definition.getBeanClassName()); // issue #59
+    ```
 
 
 
