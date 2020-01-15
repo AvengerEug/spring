@@ -573,3 +573,69 @@
         
         }
     ```
+    
+### 十四. 使用构造方法创建普通bean(非FactoryBean类型)步骤
+  * 1. 遍历bean工厂存放beanNames集合，开始创建非抽象、单例、非懒加载的bean
+  * 2. getBean(beanName)
+    ```text
+        getBean是一个common的方法, 创建bean和之后使用上下文根据beanName获取bean
+        以及循环依赖使用的getBean都会进入此方法. 
+    ```
+  * 3. doGetBean
+  * 4. getSingleton(beanName)
+    ```text
+        doGetBean针对beanName做了处理, 主要是考虑到了FactoryBean的情况:
+        1. 内部维护了两个bean的名称, 一个叫beanName另一个叫name, 
+           beanName存放是处理过的名称(将beanName前面的'&'符号去掉), name是存放原始的bean名称
+        2. 首先从bean工厂的单例池中去获取, 刚刚也说了这个方法在获取bean的时候也会被调用, 这个操
+           作对应的就是这种情形, 但拿到bean后不会立刻返回这个bean, 因为我们要确定用户要的是Fact
+           oryBean还是FactoryBean维护的bean, 这个判断依据就是根据上述提供的beanName和name的值
+           以及当前从单例池获取到的bean的类型综合判断
+    ```
+  * 5. getSingleton(String beanName, ObjectFactory<?> singletonFactory)
+    ```text
+        此方法要创建新的bean时才会用到。
+        大致步骤为:
+        1. beforeSingletonCreation: 标识这个bean正在被创建
+        2. singletonFactory.getObject(): 实际上是执行createBean方法
+        3. doCreateBean
+        4. 判断使用哪一个构造方法来实例化对象
+        5. 判断是否使用构造方法自动装配
+           条件如下:
+           1. ctors != null  => ctors中存的是构造方法中添加@Autowired注解的情形
+           2. mbd.getResolvedAutowireMode() == AUTOWIRE_CONSTRUCTOR  => 此条件为使用后置处理器手动修改beanDefinition的自动装配的值, 默认为no
+           3. mbd.hasConstructorArgumentValues()
+               => 使用后置处理器手动添加beanDefinition中存放构造方法值的情形
+           
+           4. !ObjectUtils.isEmpty(args)
+           上述条件只要满足一个就走构造方法自动装配的逻辑
+        6. 使用CglibSubclassingInstantiationStrategy策略创建bean 
+        7. 填充bean属性, 执行populateBean方法, 完成自动装配和循环依赖
+        8. 若bean实现了InitialzingBean接口, 则调用对应的接口
+        9. 回调beanPostProcessor后置处理器  
+        10. afterSingletonCreation, bean创建结束, 将bean的正在创建状态去除
+        11. addSingleton, 将bean添加到spring单例池中
+    
+    ```
+
+### 十五. 循环依赖步骤
+    ```text
+        一个案例了解循环依赖:
+    
+        1. 创建Bean a
+           第一次调用getSingleton方法, 单例池中无bean a 也没标识正在被创建, 所以走下面第二个getSingleton方法。此时a被标注正在被创建走使用构造方法创建bean的逻辑
+        2. 在创建完a后开始记录bean a的一些状态(将bean name添加至registeredSingletons以及将bean对应的ObjectFactory添加至singletonFactories)和填充属性,  发现它依赖于B, 此时要去getBean(b)
+        3. 然后进入创建bean b流程
+        4. 此时会进入第一个getSingleton方法, 此时spring单例池中无b并且b也还未被标注为被创建(因为它是在getSingleton方法后面标注的)状态所以进入创建createBean方法, 
+        5. 创建完b后开始填充属性, 发现它又依赖于A, 此时要去getBean(a)
+        6. 此时进入第一个getSingleton方法, 发现单例池中无a(虽然a在上述过程中被创建了, 但是它还未放入单例池中)但是它是处于被创建的状态, 所以从singletonFactories中根据beanName拿ObjectFactory, 最终从ObjectFactory拿到Bean a, 并将singletonFactories中beanName对应的objectFactory remove掉,以及将拿到的bean a放入到earlySingletonObjects中
+        7. 最终拿到了bean a, 此时将bean a注入到bean b中的a属性中, 完成bean的创建(此时会将它正在创建的标识移除并它放入单例池中去),  并调用BeanPostProcessor后置处理器以及InitializingBean接口的afterPropertiesSet方法
+        8. 此时又回到了上述的第二步, 现在第二步已经拿到bean b了, 所以将bean a中的b属性给注入进去, 最终完成bean a的创建, 将a也添加到spring单例池中并调用BeanPostProcessor后置处理器以及InitializingBean接口的afterPropertiesSet方法
+        9. 循环依赖步骤完成
+        
+        涉及到的几个数据结构:
+        1. registeredSingletons: 表示该bean已经通过构造方法创建出来了, 
+        2. singletonFactories: 存放bean对应的objectFactory方法, 循环依赖时需要根据它来拿bean
+        3. earlySingletonObjects: 与singletonFactories的操作是互斥的, 里面存放的是singletonFactories中beanName对应的objectFactory创建出来的bean,若一个beanName在该集合中存在, 那么该bean对应的ObjectFactory就会在singletonFactories中被remove掉
+        4. singletonsCurrentlyInCreation: 表示当前bean正在被创建, 在getSingleton(String beanName, ObjectFactory<?> singletonFactory)方法中进行操作, 添加、移除正在创建的标识都是在此方法中完成
+    ```
