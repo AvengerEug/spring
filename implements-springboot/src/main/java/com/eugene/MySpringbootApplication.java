@@ -38,7 +38,7 @@ public class MySpringbootApplication {
              * 最终代码如下
              */
             // 设置tomcat访问上下文路径, 以及服务器资源路径
-            tomcat.addContext("/", "d://eugene");
+            tomcat.addContext("/", "d://");
 
             // Load Spring web application configuration
             AnnotationConfigWebApplicationContext ac = new AnnotationConfigWebApplicationContext();

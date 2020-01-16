@@ -2,7 +2,6 @@ package com.eugene;
 
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -26,6 +25,9 @@ public class AppConfig {
 
     /**
      * 有了web的启动环境, 这个类才能会回调上
+     *
+     * spring自己内置的是有针对string的消息转换器
+     * 但是没有map类型的转换器
      */
     @Component
     public class MyWebMvcConfigurer implements WebMvcConfigurer {

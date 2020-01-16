@@ -1,12 +1,17 @@
 package com.eugene;
 
 import org.springframework.web.WebApplicationInitializer;
-import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
-import org.springframework.web.servlet.DispatcherServlet;
 
 import javax.servlet.ServletContext;
-import javax.servlet.ServletRegistration;
 
+/**
+ * 若tomcat是使用
+ * tomcat.addWebApp的方式启动的, 那么就会走servlet,
+ * 最终会回调这个类的onStartup方法
+ *
+ * 若使用的是tomcat.addContext的方式, 那么就不会走servlet,
+ * 最终不会回调这个类的onStartup方法
+ */
 public class MyWebApplicationInitializer implements WebApplicationInitializer {
 
     /**
