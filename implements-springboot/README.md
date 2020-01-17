@@ -102,11 +102,47 @@
        
 
 ## 二、DispatchServlet到底做了什么事
-DispatchServlet, 要调用到它有两种方式:
-1. 使用tomcat的addWebApp的方式添加上下文路径, 这样我们就可以和官网一样自定义实现WebApplicationInitializer的类
-   来启动web应用, 最终将DispatchServlet添加至Servlet上下文中, 进而从DispatchServlet入口开始启动spring mvc
-
-2. 使用tomcat的addContext方式启动, 但此时tomcat不会去调用servlet容器, 所以我们还要添加@EnableWebMvc注解,
-   但是呢@EnableWebMvc注解的执行会依赖于一个ServletContext上下文对象, 所以我们得注册一个ServletContext的bean
-   到spring, 这种方式可能行得通(没试过)。 但有一个更高级的方式, 就是将spring上下文传入DispatcherServlet类中,
-   在DispatchServlet中对spring上下文进行refresh操作和实例化ServletContext上下文对象
+  * spring mvc的启动入口就是在DispatchServlet类, 那么这个类到底做了什么呢
+    ```text
+        1. 以java config的方法启动mvc顺序
+          1.1 入口: 创建DispatchServlet实例做的事情
+              DispatcherServlet servlet = new DispatcherServlet(webApplicationContext);
+              
+              >调用GenericServlet的无参构造方法 => 没有干啥事
+                >调用HttpServlet的无参构造方法 => 没有干啥事           => 这里调用无参构造方法原因: 因为他们没有带参构造方法, 所以使用默认的构造方法(无参构造方法)
+                  >调用HttpServletBean的无参构造方法 => 没有做啥事
+                    >调用FrameworkServlet有参构造方法 => 在此处维护了一个webApplicationContext, 它就是spring web应用的上下文
+                      >调用DispatcherServlet有参构造方法 => 标识了可以分发options请求
+          1.2 标识dispatchServlet的LoadOnStartup为1 => 表示启动tomcat后会首先加载DispatchServlet的init方法
+          1.3 执行DispatchServlet的init方法,
+              >自己没有重写init方法, 进而找父类的init方法, 发现HttpServletBean父类才有init方法, 进而执行它
+                >调用initServletBean方法, 但此时的当前对象是DispatchServlet，所以它又先看自己有没有initServletBean方法, 
+                 发现自己没有, 但父类FrameworkServlet有, 则调用FrameworkServlet的initServletBean方法, 在此处调用了initWebApplicationContext方法,
+                   >同理, 自己没有initWebApplicationContext方法，父类FrameworkServlet才有, 即调用父类FrameworkServlet的initWebApplicationContext方法
+                     >在initWebApplicationContext方法中通过传入的webApplicationContext执行了refresh方法, 他在refresh方法中对bean工厂进行了初始化 
+                      这与AnnotationConfigApplicationContext上下文bean工厂的初始化顺序不一样, 一个是在父类默认构造方法初始化另一个在refresh中初始化
+                        >进入invokeBeanFactoryPostProcessors方法开始处理后置处理器, 扫描包
+                          >在执行loadBeanDefinitions方法之前, 只有一个AppConfig类和一些扫描出来的Controller以及最重要的DelegatingWebMvcConfiguration类
+                           此类的作用会将spring mvc的一些bean全部注册到bean工厂, 因为在它的父类WebMvcConfigurationSupport中有大量的@Bean注解(18个),
+                           org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping
+                           org.springframework.util.PathMatcher
+                           org.springframework.web.util.UrlPathHelper
+                           org.springframework.web.accept.ContentNegotiationManager
+                           org.springframework.web.servlet.handler.AbstractHandlerMapping  =>  viewControllerHandlerMapping
+                           org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping
+                           org.springframework.web.servlet.handler.AbstractHandlerMapping => resourceHandlerMapping
+                           org.springframework.web.servlet.resource.ResourceUrlProvider
+                           org.springframework.web.servlet.HandlerMapping => defaultServletHandlerMapping
+                           org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter
+                           org.springframework.format.support.FormattingConversionService
+                           org.springframework.validation.Validator
+                           org.springframework.web.method.support.CompositeUriComponentsContributor
+                           org.springframework.web.servlet.mvc.HttpRequestHandlerAdapter
+                           org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter
+                           org.springframework.web.servlet.HandlerExceptionResolver
+                           org.springframework.web.servlet.ViewResolver
+                           org.springframework.web.servlet.handler.HandlerMappingIntrospector
+                           最终在实例化bean时通过一些扩展点，比如InitializingBean、BeanPostProcessor扩展点来调用bean的业务逻辑
+        2. http请求入口, 
+           统一进入DispatchServlet的service方法中, 由request的一些信息和spring bean扫描得到的request mapping来决定调用具体的方法
+    ```
