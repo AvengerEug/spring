@@ -23,7 +23,7 @@
 
     </select>
     <update id="update" parameterType="User" >
-        UPDATE user SET user_name = 'eugene1222222' WHERE user_id = 1
+        UPDATE user SET user_name = 'eugene11111' WHERE user_id = 1
     </update>
 
 </mapper>

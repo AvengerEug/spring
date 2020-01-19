@@ -6,13 +6,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
 
 @ComponentScan("com.eugene.sumarry.mybatis")
 @Configuration
 @MapperScan("com.eugene.sumarry.mybatis.dao")
+@EnableTransactionManagement
 public class AppConfig {
 
     @Bean
@@ -39,5 +43,12 @@ public class AppConfig {
         sqlSessionFactoryBean.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath:mapper/**/*.xml"));
         sqlSessionFactoryBean.setFailFast(true);
         return sqlSessionFactoryBean;
+    }
+
+    @Bean
+    public PlatformTransactionManager platformTransactionManager() {
+        DataSourceTransactionManager manager = new DataSourceTransactionManager();
+        manager.setDataSource(dataSource());
+        return manager;
     }
 }

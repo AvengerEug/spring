@@ -52,7 +52,17 @@
       definition.getConstructorArgumentValues().addGenericArgumentValue(definition.getBeanClassName()); // issue #59
     ```
 
-
-
-
+## 六、spring事务管理流程
+  * @Transactional注解可以添加在类中也可以添加在方法中, 若添加在类中则对类中的所有方法
+    都添加事务管理,
+  * 要想添加事务需要做如下步骤:
+     1. 开启事务管理, 在一个bean中添加@EnableTransactionManagement注解表示开启事务管理
+     2. 添加一个事务管理器(也能自己自定义一个事务逻辑, 可以参考MyTransactionManager类)， 如下
+        @Bean
+        public PlatformTransactionManager platformTransactionManager() {
+            DataSourceTransactionManager manager = new DataSourceTransactionManager();
+            manager.setDataSource(dataSource());
+            return manager;
+        }
+     3. 设置事务回滚的类名, 这里设置了是抛出了exception类型的异常就回滚
 

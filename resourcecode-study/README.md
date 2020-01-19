@@ -202,7 +202,7 @@
       * 在此处被触发PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors的invokeBeanFactoryPostProcessors被触发
       内部有多个地方调用invokeBeanFactoryPostProcessors方法, 要注意传入的参数来确定调用的是哪一种BeanPostProcessor 
     
-  2. `BeanFactoryPostProcessor` 使用jdk1.8的方式来扩展, 表示这个接口可以采用流的方式进行添加, 因为有这个注解`@FunctionalInterface`
+  2. `BeanFactoryPostProcessor` 这个接口可以采用流的方式进行添加, 因为有这个注解`@FunctionalInterface`
   
       * spring内置类`ConfigurationClassPostProcessor`就是一个BeanFactoryPostProcessor, 在此后置处理器中对全配置类(在解析配置类时, 
         若类中存在@Configration注解, 则添加一个属性, key`org.springframework.context.annotation.ConfigurationClassPostProcessor
@@ -619,23 +619,61 @@
     ```
 
 ### 十五. 循环依赖步骤
-    ```text
-        一个案例了解循环依赖:
+```text
+    一个案例了解循环依赖:
+
+    1. 创建Bean a
+        第一次调用getSingleton方法, 单例池中无bean a 也没标识正在被创建, 所以走下面第二个getSingleton方法。此时a被标注正在被创建走使用构造方法创建bean的逻辑
+    2. 在创建完a后开始记录bean a的一些状态(将bean name添加至registeredSingletons以及将bean对应的ObjectFactory添加至singletonFactories)和填充属性,  发现它依赖于B, 此时要去getBean(b)
+    3. 然后进入创建bean b流程
+    4. 此时会进入第一个getSingleton方法, 此时spring单例池中无b并且b也还未被标注为被创建(因为它是在getSingleton方法后面标注的)状态所以进入创建createBean方法, 
+    5. 创建完b后开始填充属性, 发现它又依赖于A, 此时要去getBean(a)
+    6. 此时进入第一个getSingleton方法, 发现单例池中无a(虽然a在上述过程中被创建了, 但是它还未放入单例池中)但是它是处于被创建的状态, 所以从singletonFactories中根据beanName拿ObjectFactory, 最终从ObjectFactory拿到Bean a, 并将singletonFactories中beanName对应的objectFactory remove掉,以及将拿到的bean a放入到earlySingletonObjects中
+    7. 最终拿到了bean a, 此时将bean a注入到bean b中的a属性中, 完成bean的创建(此时会将它正在创建的标识移除并它放入单例池中去),  并调用BeanPostProcessor后置处理器以及InitializingBean接口的afterPropertiesSet方法
+    8. 此时又回到了上述的第二步, 现在第二步已经拿到bean b了, 所以将bean a中的b属性给注入进去, 最终完成bean a的创建, 将a也添加到spring单例池中并调用BeanPostProcessor后置处理器以及InitializingBean接口的afterPropertiesSet方法
+    9. 循环依赖步骤完成
     
-        1. 创建Bean a
-           第一次调用getSingleton方法, 单例池中无bean a 也没标识正在被创建, 所以走下面第二个getSingleton方法。此时a被标注正在被创建走使用构造方法创建bean的逻辑
-        2. 在创建完a后开始记录bean a的一些状态(将bean name添加至registeredSingletons以及将bean对应的ObjectFactory添加至singletonFactories)和填充属性,  发现它依赖于B, 此时要去getBean(b)
-        3. 然后进入创建bean b流程
-        4. 此时会进入第一个getSingleton方法, 此时spring单例池中无b并且b也还未被标注为被创建(因为它是在getSingleton方法后面标注的)状态所以进入创建createBean方法, 
-        5. 创建完b后开始填充属性, 发现它又依赖于A, 此时要去getBean(a)
-        6. 此时进入第一个getSingleton方法, 发现单例池中无a(虽然a在上述过程中被创建了, 但是它还未放入单例池中)但是它是处于被创建的状态, 所以从singletonFactories中根据beanName拿ObjectFactory, 最终从ObjectFactory拿到Bean a, 并将singletonFactories中beanName对应的objectFactory remove掉,以及将拿到的bean a放入到earlySingletonObjects中
-        7. 最终拿到了bean a, 此时将bean a注入到bean b中的a属性中, 完成bean的创建(此时会将它正在创建的标识移除并它放入单例池中去),  并调用BeanPostProcessor后置处理器以及InitializingBean接口的afterPropertiesSet方法
-        8. 此时又回到了上述的第二步, 现在第二步已经拿到bean b了, 所以将bean a中的b属性给注入进去, 最终完成bean a的创建, 将a也添加到spring单例池中并调用BeanPostProcessor后置处理器以及InitializingBean接口的afterPropertiesSet方法
-        9. 循环依赖步骤完成
-        
-        涉及到的几个数据结构:
-        1. registeredSingletons: 表示该bean已经通过构造方法创建出来了, 
-        2. singletonFactories: 存放bean对应的objectFactory方法, 循环依赖时需要根据它来拿bean
-        3. earlySingletonObjects: 与singletonFactories的操作是互斥的, 里面存放的是singletonFactories中beanName对应的objectFactory创建出来的bean,若一个beanName在该集合中存在, 那么该bean对应的ObjectFactory就会在singletonFactories中被remove掉
-        4. singletonsCurrentlyInCreation: 表示当前bean正在被创建, 在getSingleton(String beanName, ObjectFactory<?> singletonFactory)方法中进行操作, 添加、移除正在创建的标识都是在此方法中完成
-    ```
+    涉及到的几个数据结构:
+    1. registeredSingletons: 表示该bean已经通过构造方法创建出来了, 
+    2. singletonFactories: 存放bean对应的objectFactory方法, 循环依赖时需要根据它来拿bean
+    3. earlySingletonObjects: 与singletonFactories的操作是互斥的, 里面存放的是singletonFactories中beanName对应的objectFactory创建出来的bean,若一个beanName在该集合中存在, 那么该bean对应的ObjectFactory就会在singletonFactories中被remove掉
+    4. singletonsCurrentlyInCreation: 表示当前bean正在被创建, 在getSingleton(String beanName, ObjectFactory<?> singletonFactory)方法中进行操作, 添加、移除正在创建的标识都是在此方法中完成
+```
+    
+### 十六. spring事务管理原理与自定义事务
+  * spring开启事务步骤
+    1. 添加`@EnableTransactionManagement`注解开启事务管理
+    2. 添加事务管理器的bean, eg: `DataSourceTransactionManager`
+    3. 在方法或类中添加`@Transactional`注解(可配置rollbackForClassName指定回滚的类型)
+    
+  * 原理:
+    1. `@EnableTransactionManagement`注解利用了spring的@Import注解扩展点,
+       import了类`TransactionManagementConfigurationSelector`
+       (父类进行校验, 自己负责返回真正的bean)
+       并根据通知模式(`adviceMode`)来动态的添加特定的bean
+       若通知模式为PROXY, 
+         则添加`AutoProxyRegistrar`和`ProxyTransactionManagementConfiguration`两个bean
+         其中`AutoProxyRegistrar`还是个`ImportBeanDefinitionRegistrar`, 最终会注册一个
+         cglib代理类
+       若通知模式为ASPECTJ,
+         则添加`org.springframework.transaction.aspectj.AspectJTransactionManagementConfiguration`
+         bean
+       使用哪种模式可以在`@EnableTransactionManagement`注解的mode属性指定, 默认为`PROXY`
+    2. 需要添加事务管理器, 这里做的比较低耦合, 我们可以实现自定义的事务管理器, eg: jpa、jdbc等等
+       但spring的事务模块中并没有手动添加默认的事务管理器, 这个需要我们自己手动添加
+    3. 添加`@Transactional`注解, 可指定为抛出异常的指定类来执行回滚操作
+
+### 十七. Spring bean初始化过程中涉及到的后置处理器、执行顺序及作用
+
+| 执行顺序 | 执行位置 | 执行到的后置处理器 | 执行的方法 | 作用 |
+| :-: | :-: | :-: | :-: | :-: |
+| 1 | org.springframework.beans.factory.support.</br>AbstractAutowireCapableBeanFactory.doCreateBean => resolveBeforeInstantiation方法  | InstantiationAwareBeanPostProcessor | 1. postProcessBeforeInstantiation</br> 2.postProcessAfterInitialization | 1. postProcessBeforeInstantiation作用: 若后置处理器中返回了一个对象, 则不会走spring的创建bean的流程</br> 2.postProcessAfterInitialization方法执行了BeanPostProcessor后置处理器, 自动装配的后置处理器就间接实现了BeanPostProcessor, 若BeanPostProcessor不被执行, 那么自动装配的功能也将缺失  |
+| 2 | org.springframework.beans.factory.support.</br>AbstractAutowireCapableBeanFactory.createBeanInstance => determineConstructorsFromBeanPostProcessors | SmartInstantiationAwareBeanPostProcessor | determineCandidateConstructors | 扫描当前bean携带@Autowired注解的构造方法 |   
+| 3 | org.springframework.beans.factory.support.</br>AbstractAutowireCapableBeanFactory.doCreateBean => applyMergedBeanDefinitionPostProcessors | MergedBeanDefinitionPostProcessor | postProcessMergedBeanDefinition | 待写 |
+| 4 | org.springframework.beans.factory.support.</br>AbstractAutowireCapableBeanFactory.doCreateBean => getEarlyBeanReference |  SmartInstantiationAwareBeanPostProcessor | getEarlyBeanReference | 待写 |
+| 5 | org.springframework.beans.factory.support.</br>AbstractAutowireCapableBeanFactory.populateBean => postProcessAfterInstantiation | InstantiationAwareBeanPostProcessor | postProcessAfterInstantiation | 待写 |
+| 6 | org.springframework.beans.factory.support.</br>AbstractAutowireCapableBeanFactory.populateBean => postProcessPropertyValues | InstantiationAwareBeanPostProcessor | postProcessPropertyValues | 待写 |
+| 7 | org.springframework.beans.factory.support.</br>AbstractAutowireCapableBeanFactory.initializeBean => applyBeanPostProcessorsBeforeInitialization | BeanPostProcessor | postProcessBeforeInitialization | 当bean被实例化并完成自动装配之后执行 |
+| 8 | org.springframework.beans.factory.support.</br>AbstractAutowireCapableBeanFactory.initializeBean => applyBeanPostProcessorsAfterInitialization | BeanPostProcessor | postProcessAfterInitialization | 当bean被实例化并完成自动装配之后执行 |
+
+* 如上, 一共会执行4个后置处理器**InstantiationAwareBeanPostProcessor**, **SmartInstantiationAwareBeanPostProcessor**, **MergedBeanDefinitionPostProcessor**, **BeanPostProcessor**, 共执行了8次

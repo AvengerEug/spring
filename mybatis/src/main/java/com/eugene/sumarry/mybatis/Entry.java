@@ -7,6 +7,6 @@ public class Entry {
 
     public static void main(String[] args) {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
-        context.getBean(UserService.class).list();
+        context.getBean(UserService.class).update();
     }
 }
