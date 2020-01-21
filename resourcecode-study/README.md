@@ -446,7 +446,7 @@
     这个bean是否为FactoryBean和这两个名字是否一致(name和beanName), 若拿出来的bean是FactoryBean, 并且两个
     名字一致, 那么就认为用户要取的是FactoryBean。若拿出来的bean是FactoryBean, 但name为`&testFactoryBean`
     那么会返回testFactoryBean的getObject方法的对象。 如果是第二次获取FactoryBean对象的话, 那么就会从一个名
-    叫`factoryBeanObjectCache`的map中去取, 因为在第一获取的时候, 会将这个对象放在这个map中, key为FactoryBean
+    叫`factoryBeanObjectCache`的map中去取, 因为在第一次获取时, 会将这个对象放在这个map中, key为FactoryBean
     的名称, 与spring容器中存储FactoryBean的名称一致, 只不过他们是存在不同的数据结构中
   
 

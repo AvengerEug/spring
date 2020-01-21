@@ -20,6 +20,7 @@
         <module>resourcecode-study</module>
         <module>implement-mapperscan</module>
         <module>mybatis</module>
+        <module>spring-mvc</module>
     </modules>
 
     <artifactId>spring</artifactId>
