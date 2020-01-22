@@ -440,12 +440,12 @@
     新变量(beanName), 最终整个创建bean的流程就是以无`&`符号的名字取创建, 所以最终会在bean工厂中创建一个名
     为`testFactoryBean`的bean
     
-    当我们调用spring获取bean的api时(eg: context.getBean("&testFactoryBean")或context.getBean("&test
+    当我们调用spring获取bean的api时(eg: context.getBean("&testFactoryBean")或context.getBean("test
     FactoryBean"))时, 它最终都是根据`testFactoryBean`来获取bean, 但是每次都会携带原来传入的bean名称和处理
-    过的bean名称，分别赋值为name和beanName, 所以它最终是根据beanName去获取bean的, 但最终它拿到bean后会校验
-    这个bean是否为FactoryBean和这两个名字是否一致(name和beanName), 若拿出来的bean是FactoryBean, 并且两个
-    名字一致, 那么就认为用户要取的是FactoryBean。若拿出来的bean是FactoryBean, 但name为`&testFactoryBean`
-    那么会返回testFactoryBean的getObject方法的对象。 如果是第二次获取FactoryBean对象的话, 那么就会从一个名
+    过的bean名称，分别存在name和beanName两个变量, 所以它最终是根据beanName去获取bean的, 拿到的bean一定是一
+    个FactoryBean。最终再调用getObjectForBeanInstance方法来获取真正需要的bean。spring会根据getBean("beanName")
+    api中的beanName来决定return哪个bean。若api中的beanName包含&符号, 那么就返回FactoryBean即可，若不包含则返回
+    FactoryBean中维护的bean, 即调用getObject方法。如果是第二次获取FactoryBean对象的话, 那么就会从一个名
     叫`factoryBeanObjectCache`的map中去取, 因为在第一次获取时, 会将这个对象放在这个map中, key为FactoryBean
     的名称, 与spring容器中存储FactoryBean的名称一致, 只不过他们是存在不同的数据结构中
   
