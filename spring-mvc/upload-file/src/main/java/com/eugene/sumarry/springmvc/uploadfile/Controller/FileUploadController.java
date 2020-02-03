@@ -27,7 +27,7 @@ public class FileUploadController {
             System.out.println(multipartFile);
             InputStream io = multipartFile.getInputStream();
             // 把文件写在在classpath下的sss.png文件
-            FileCopyUtils.copy(io, new FileOutputStream(new File(FileUploadController.class.getResource("/").getPath() + "sss.png")));
+            FileCopyUtils.copy(io, new FileOutputStream(new File(FileUploadController.class.getResource("/").getPath() + multipartFile.getOriginalFilename())));
         } catch (IOException e) {
             e.printStackTrace();
         }
