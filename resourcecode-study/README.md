@@ -510,6 +510,7 @@
      
 * 原理
   1. spring在执行refresh方法中的prepareBeanFactory方法时, 会新增spring内置的ApplicationContextAwareProcessor后置处理器
+     => 此后置处理器会将ApplicationContextHolder中的ApplicationContext属性注入进去
   2. spring在执行refresh方法中的registerBeanPostProcessors方法时, 会新增ApplicationListener bean的后置处理器
      `ApplicationListenerDetector`, 主要作用就是将他添加到上下文对象的存放ApplicationListener的Set集合中
   3. spring在执行refresh方法中的initApplicationEventMulticaster方法时, 会初始化spring的事件驱动对象
@@ -521,7 +522,16 @@
   6. 发布事件, 根据事件本身对象拿到监听者, 然后调用监听者的方法
   
 * 小结
-  * 这里用到了很多集合来存储监听者对象, 用了广播机制, 当一个事件发布的时候, 要找到所有这个事件的监听者, 然后再统一调用
+  * 这里用到了很多集合来存储监听者对象, 用了广播机制(监听者模式), 当一个事件发布的时候, 要找到所有这个事件的监听者, 然后再统一调用
+  * spring内置有两个Event(ApplicationContextEvent和RequestHandlerEvent), 具体信息如下:
+    1. ApplicationContextEvent
+      * ContextRefreshEvent
+      * ContextStopEvent
+      * ContextStartEvent
+      * ContextCloseEvent
+    
+    2. RequestHandlerEvent
+      * 待总结
   
 
 ### 十三. @Bean与@Configuration注解
