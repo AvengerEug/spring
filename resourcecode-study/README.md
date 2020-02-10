@@ -12,10 +12,10 @@
 
   #### 3.2. BeanDefinition添加至工厂过程
    ![执行顺序](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/beanDefinition注册过程.png)
-   
+
   #### 3.3 invokeBeanFactoryPostProcessors执行过程
    ![执行顺序](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/invokeBeanFactoryPostProcessors执行过程.png)
-   
+
    * 源码注释
      ```java
         public static void invokeBeanFactoryPostProcessors(
@@ -23,21 +23,21 @@
         
             // Invoke BeanDefinitionRegistryPostProcessors first, if any.
             Set<String> processedBeans = new HashSet<>();
-    
+        
             // 传入的bean工厂DefaultListableBeanFactory也是一个BeanDefinitionRegistry, 它实现了这个接口
             if (beanFactory instanceof BeanDefinitionRegistry) {
                 BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
-    
+        
                 // 用来存储手动添加BeanFactoryPostProcessor的处理器,
                 // eg: context.addBeanFactoryPostProcessor(new MyBeanDefinitionRegistryPostProcessor());
                 // 其中context是AnnotationConfigApplicationContext对象, 但是它只是执行到了父类AbstractApplicationContext的方法
                 List<BeanFactoryPostProcessor> regularPostProcessors = new ArrayList<>();
-    
+        
                 // 用来存储手动添加BeanDefinitionRegistryPostProcessor的处理器, 也是执行上述注释中说的方法
                 // 因为BeanFactoryPostProcessor有一个子类叫BeanDefinitionRegistryPostProcessor
                 // regularPostProcessors和registryProcessors这两个list只是为了存储手动添加的BeanFactoryPostProcessor
                 List<BeanDefinitionRegistryPostProcessor> registryProcessors = new ArrayList<>();
-    
+        
                 for (BeanFactoryPostProcessor postProcessor : beanFactoryPostProcessors) {
                     if (postProcessor instanceof BeanDefinitionRegistryPostProcessor) {
                         BeanDefinitionRegistryPostProcessor registryProcessor =
@@ -52,10 +52,10 @@
                         regularPostProcessors.add(postProcessor);
                     }
                 }
-    
+        
                 // 这个list是用来存储spring内置的BeanFactoryPostProcessor
                 List<BeanDefinitionRegistryPostProcessor> currentRegistryProcessors = new ArrayList<>();
-    
+        
                 // 这里是调用实现了PriorityOrdered接口的BeanDefinitionRegistryPostProcessor后置处理器
                 // 这里只是获取, 调用是在下面的invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry);完成的
                 String[] postProcessorNames =
@@ -78,7 +78,7 @@
                 //  2.2 判断传入类是否加了@Configuration注解或者(@Component和@ComponentScan和@Import和ImportResource注解)或者内部是否有方法添加了@Bean注解并解析他们
                 invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry);
                 currentRegistryProcessors.clear();
-    
+        
                 // Next, invoke the BeanDefinitionRegistryPostProcessors that implement Ordered.
                 postProcessorNames = beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);
                 for (String ppName : postProcessorNames) {
@@ -91,7 +91,7 @@
                 registryProcessors.addAll(currentRegistryProcessors);
                 invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry);
                 currentRegistryProcessors.clear();
-    
+        
                 // Finally, invoke all other BeanDefinitionRegistryPostProcessors until no further ones appear.
                 boolean reiterate = true;
                 while (reiterate) {
@@ -109,7 +109,7 @@
                     invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry);
                     currentRegistryProcessors.clear();
                 }
-    
+        
                 // Now, invoke the postProcessBeanFactory callback of all processors handled so far.
                 // 这里是第一次调用手动添加到spring的BeanDefinitionRegistryPostProcessor的重写BeanFactoryPostProcessors接口的(postProcessBeanFactory)方法
                 // 因为BeanDefinitionRegistryPostProcessor是继承BeanFactoryPostProcessor类。所以也重写了BeanFactoryPostProcessor的方法
@@ -118,12 +118,12 @@
                 // 这里是第一次调用手动添加到spring的BeanFactoryPostProcessor
                 invokeBeanFactoryPostProcessors(regularPostProcessors, beanFactory);
             }
-    
+        
             else {
                 // Invoke factory processors registered with the context instance.
                 invokeBeanFactoryPostProcessors(beanFactoryPostProcessors, beanFactory);
             }
-    
+        
             // Do not initialize FactoryBeans here: We need to leave all regular beans
             // uninitialized to let the bean factory post-processors apply to them!
             // 这里是调用非手动添加的BeanFactoryPostProcessor后置处理器, 即使用了@Component注解
@@ -133,7 +133,7 @@
             // 继承了BeanFactoryPostProcessor接口
             String[] postProcessorNames =
                     beanFactory.getBeanNamesForType(BeanFactoryPostProcessor.class, true, false);
-    
+        
             // Separate between BeanFactoryPostProcessors that implement PriorityOrdered,
             // Ordered, and the rest.
             List<BeanFactoryPostProcessor> priorityOrderedPostProcessors = new ArrayList<>();
@@ -153,12 +153,12 @@
                     nonOrderedPostProcessorNames.add(ppName);
                 }
             }
-    
+        
             // First, invoke the BeanFactoryPostProcessors that implement PriorityOrdered.
             // 解析实现了PriorityOrdered接口的BeanFactoryPostProcessor并按顺序执行
             sortPostProcessors(priorityOrderedPostProcessors, beanFactory);
             invokeBeanFactoryPostProcessors(priorityOrderedPostProcessors, beanFactory);
-    
+        
             // 解析实现了Ordered接口的BeanFactoryPostProcessor并按顺序执行
             List<BeanFactoryPostProcessor> orderedPostProcessors = new ArrayList<>();
             for (String postProcessorName : orderedPostProcessorNames) {
@@ -166,14 +166,14 @@
             }
             sortPostProcessors(orderedPostProcessors, beanFactory);
             invokeBeanFactoryPostProcessors(orderedPostProcessors, beanFactory);
-    
+        
             // 调用实现了没有实现PriorityOrdered和Ordered接口的BeanFactoryPostProcessor的后置处理器
             List<BeanFactoryPostProcessor> nonOrderedPostProcessors = new ArrayList<>();
             for (String postProcessorName : nonOrderedPostProcessorNames) {
                 nonOrderedPostProcessors.add(beanFactory.getBean(postProcessorName, BeanFactoryPostProcessor.class));
             }
             invokeBeanFactoryPostProcessors(nonOrderedPostProcessors, beanFactory);
-    
+        
             // Clear cached merged bean definitions since the post-processors might have
             // modified the original metadata, e.g. replacing placeholders in values...
             beanFactory.clearMetadataCache();
@@ -181,9 +181,9 @@
      ```
 
   #### 3.4 processConfigBeanDefinitions执行过程
-   
+
    * 主要作用: 循环bean工厂所有的beanDefinition, 处理配置类(全配置类)和非配置类的beanDefinition
-   
+
    ![执行顺序](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/processConfigBeanDefinitions执行过程.png)
 
 ### 四. AnnotationConfigApplicationContext
@@ -217,10 +217,10 @@
      => 这种方式的扩展点有两种方式
         1. 手动添加到AbstractApplicationContext的beanFactoryPostProcessors属性中, 这种方式跟spring内置beanFactoryPostProcessors处理方式一样
         2. 直接添加@Component注解, 让spring扫描后去处理
-        
+     
         其实它是继承了BeanFactoryPostProcessor类, 所以BeanFactoryPostProcessor类的扩展也有这两种方式
-    
-  
+
+
 ### 六. ApplicationContextAwareProcessor 后置处理器作用
   * 首先它实现了`BeanPostProcessor`接口, 在bean初始化的时候被调用, 但因为它是spring内置的bean, 所以是采用手动添加列表的方式, 没有添加注册bean有关的注解
   * 代码如下: 它会给bean设置一些属性, 比如我们开发spring项目时经常会添加叫做`ApplicationContextHolder`的bean, 并让他实现`ApplicationContextAware`接口,
@@ -328,7 +328,7 @@
                 }
             }
         ```
-  
+
 ### 八. 使用ImportSelector注解和BeanPostProcessor后置处理器模拟aop
   * 使用该方式可以手动开关aop功能
   * 具体核心在spring扫描解析类的时候, 会处理Import注解, 在处理Import注解时会处理如下三种情况
@@ -397,7 +397,7 @@
        将方法名前面的set、get去掉后再将第一个字母小写得到的值
        (eg: getTest(); 最终会得到test)作为自动装配的候选者).
     * 装配的条件:
-        
+      
         | 对应spring源码 | 含义 | 判断顺序 |
         | -- | -- | -- |
         | pd.getWriteMethod() | 验证属性是否有set方法, pd为属性的描述器 | 1 |
@@ -507,7 +507,7 @@
            "1", "2"
         }))
      ```
-     
+  
 * 原理
   1. spring在执行refresh方法中的prepareBeanFactory方法时, 会新增spring内置的ApplicationContextAwareProcessor后置处理器
      => 此后置处理器会将ApplicationContextHolder中的ApplicationContext属性注入进去
@@ -531,7 +531,7 @@
       * ContextCloseEvent
     
     2. RequestHandlerEvent
-      * 待总结
+      * 待总结`d'd
   
 
 ### 十三. @Bean与@Configuration注解
@@ -649,7 +649,7 @@
     3. earlySingletonObjects: 与singletonFactories的操作是互斥的, 里面存放的是singletonFactories中beanName对应的objectFactory创建出来的bean,若一个beanName在该集合中存在, 那么该bean对应的ObjectFactory就会在singletonFactories中被remove掉
     4. singletonsCurrentlyInCreation: 表示当前bean正在被创建, 在getSingleton(String beanName, ObjectFactory<?> singletonFactory)方法中进行操作, 添加、移除正在创建的标识都是在此方法中完成
 ```
-    
+
 ### 十六. spring事务管理原理与自定义事务
   * spring开启事务步骤
     1. 添加`@EnableTransactionManagement`注解开启事务管理
@@ -678,7 +678,7 @@
 | 执行顺序 | 执行位置 | 执行到的后置处理器 | 执行的方法 | 作用 |
 | :-: | :-: | :-: | :-: | :-: |
 | 1 | org.springframework.beans.factory.support.</br>AbstractAutowireCapableBeanFactory.doCreateBean => resolveBeforeInstantiation方法  | InstantiationAwareBeanPostProcessor | 1. postProcessBeforeInstantiation</br> 2.postProcessAfterInitialization | 1. postProcessBeforeInstantiation作用: 若后置处理器中返回了一个对象, 则不会走spring的创建bean的流程</br> 2.postProcessAfterInitialization方法执行了BeanPostProcessor后置处理器, 自动装配的后置处理器就间接实现了BeanPostProcessor, 若BeanPostProcessor不被执行, 那么自动装配的功能也将缺失  |
-| 2 | org.springframework.beans.factory.support.</br>AbstractAutowireCapableBeanFactory.createBeanInstance => determineConstructorsFromBeanPostProcessors | SmartInstantiationAwareBeanPostProcessor | determineCandidateConstructors | 扫描当前bean携带@Autowired注解的构造方法 |   
+| 2 | org.springframework.beans.factory.support.</br>AbstractAutowireCapableBeanFactory.createBeanInstance => determineConstructorsFromBeanPostProcessors | SmartInstantiationAwareBeanPostProcessor | determineCandidateConstructors | 扫描当前bean携带@Autowired注解的构造方法 |
 | 3 | org.springframework.beans.factory.support.</br>AbstractAutowireCapableBeanFactory.doCreateBean => applyMergedBeanDefinitionPostProcessors | MergedBeanDefinitionPostProcessor | postProcessMergedBeanDefinition | 待写 |
 | 4 | org.springframework.beans.factory.support.</br>AbstractAutowireCapableBeanFactory.doCreateBean => getEarlyBeanReference |  SmartInstantiationAwareBeanPostProcessor | getEarlyBeanReference | 待写 |
 | 5 | org.springframework.beans.factory.support.</br>AbstractAutowireCapableBeanFactory.populateBean => postProcessAfterInstantiation | InstantiationAwareBeanPostProcessor | postProcessAfterInstantiation | 待写 |
@@ -687,3 +687,74 @@
 | 8 | org.springframework.beans.factory.support.</br>AbstractAutowireCapableBeanFactory.initializeBean => applyBeanPostProcessorsAfterInitialization | BeanPostProcessor | postProcessAfterInitialization | 当bean被实例化并完成自动装配之后执行 |
 
 * 如上, 一共会执行4个后置处理器**InstantiationAwareBeanPostProcessor**, **SmartInstantiationAwareBeanPostProcessor**, **MergedBeanDefinitionPostProcessor**, **BeanPostProcessor**, 共执行了8次
+
+### 十八. Spring Mvc
+* 启动流程
+   1. DispatchServlet设置setLoadOnStartup(1) => 在tomcat启动时就会调用Servlet的init方法
+   
+   2. Spring Mvc的两种Controller的定义方式:
+   
+      * ```java
+        @RestController
+        @RequestMapping("/index")
+        public class Index1Controller {
+        
+           @GetMapping
+           @ResponseBody
+           public String index() {
+              return "indexssss";
+           }
+        }
+        ```
+   
+      * ```java
+        @Component("/index2")
+        public class Index2Controller implements Controller {
+        
+           @Override
+           public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
+              return new ModelAndView("index");
+           }
+        }
+        ```
+   
+      * 解析:
+   
+        1. 上述第一种在springmvc底层中会使用`org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping`
+   
+           来处理, 主要是处理Request uri和method的映射关系
+   
+        2. 上述的第二种在springmvc底层中会使用
+   
+           `org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping`来处理, 主要是处理request uri和bean name的映射关系。 此种方式跟原生的`servlet`功能一样, 只能处理一个请求,即一个bean处理一个请求, 且返回值只能是`ModelAndView`. 并且bean name一定要为request的uri。到最后调用时，此种方式最简单, 直接获取到bean并调用接口中的**handleRequest**方法即可。
+   
+   3. 一个url从浏览器输入到最后获取到对应mapping handler的过程
+   
+      	1. 浏览器输入**localhost:8080/index**
+       	2. 进入dispatchServlet的**doService**方法， 并调用分发**doDispatch**方法
+       	3. 调用**getHandler**方法, 根据request 的uri获取对应的mapping handler处理器
+       	4. 根据mapping uri从上述存储url和handler映射关系的两个map(`org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping、org.springframework.web.servlet.handler.BeanNameUrlHandlerMapping`)中获取handler. 先从**BeanNameUrlHandlerMapping**获取后再从**RequestMappingHandlerMapping**获取。
+       	5. 根据mapping handler获取handlerAdapter, 即根据不同的Controller类型(上述的两种实现controller的方式)获取到不同的适配器，最终根据适配器来执行请求
+   
+   4. 两个存储request mapping的类何时被初始化的?
+   
+      1. DispatchServlet类的静态代码块中加载了一个配置文件**DispatcherServlet.properties**
+   
+      2. spring发布refresh事件时，**FrameworkServlet**类中维护了一个内部类**ContextRefreshListener**。此类是spring事件模型中继承了ApplicationContextEvent类的ContextRefreshEvent事件的监听器。在此处**initStrategies**方法, 并在此方法中做了spring mvc一系列的事情，具体如下
+   
+         ```java
+         protected void initStrategies(ApplicationContext context) {
+            // 初始化spring文件上传的bean, 这段代码可以解释为什么文件上传的bean的name一定要写死成multipartResolver
+            initMultipartResolver(context);
+            initLocaleResolver(context);
+            initThemeResolver(context);
+             
+            // 初始化springmvc url的映射关系, 此处会初始化那两个map BeanNameUrlHandlerMapping, RequestMappingHandlerMapping
+            initHandlerMappings(context);
+            initHandlerAdapters(context);
+            initHandlerExceptionResolvers(context);
+            initRequestToViewNameTranslator(context);
+            initViewResolvers(context);
+            initFlashMapManager(context);
+         }
+         ```
