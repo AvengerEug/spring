@@ -751,6 +751,12 @@
              
             // 初始化springmvc url的映射关系, 此处会初始化那两个map BeanNameUrlHandlerMapping, RequestMappingHandlerMapping
             initHandlerMappings(context);
+             
+            // 同理, 初始化springmvc的handlerAdapter, 与handlerMapping的初始化流程类似，都是从配置文件中读取对应类的class全路径名，并使用spring的bean工厂完成bean的创建
+            // 分别是这三个:
+            // org.springframework.web.servlet.mvc.HttpRequestHandlerAdapter 
+            // org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter => 处理BeanNameUrlHandlerMapping类型的handlerMapping
+            // org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter => 处理RequestMappingHandlerMapping类型的handlerMapping
             initHandlerAdapters(context);
             initHandlerExceptionResolvers(context);
             initRequestToViewNameTranslator(context);
@@ -758,3 +764,16 @@
             initFlashMapManager(context);
          }
          ```
+
+### 十九、Spring Mvc处理请求流程
+
+1. 浏览器输入url: **localhost:8080/index?userName=eugene**
+2. 进入DispacherServlet的doService方法
+3. 处理分发调用**doDispatch**方法
+4. 根据request获取mapping handler
+5. 根据handler获取adapter
+6. 处理adapter
+7. 返回ModelAndView
+
+
+
