@@ -13,6 +13,7 @@
     <modules>
         <module>servlet3dot0spi</module>
         <module>upload-file</module>
+        <module>customer-argument-resolver</module>
     </modules>
     <artifactId>spring-mvc</artifactId>
 

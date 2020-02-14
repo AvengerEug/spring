@@ -772,8 +772,9 @@
 3. 处理分发调用**doDispatch**方法
 4. 根据request获取mapping handler
 5. 根据handler获取adapter
-6. 处理adapter
-7. 返回ModelAndView
+6. 处理interceptor
+7. 处理adapter
+8. 返回ModelAndView
 
 
 
