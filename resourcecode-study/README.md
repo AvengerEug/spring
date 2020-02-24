@@ -612,7 +612,10 @@
         4. 判断使用哪一个构造方法来实例化对象
         5. 判断是否使用构造方法自动装配
            条件如下:
-           1. ctors != null  => ctors中存的是构造方法中添加@Autowired注解的情形
+           1. ctors != null 
+                => 首先获取到所有@Autowired注解的构造方法，并根据一些条件来判断使用具体的哪一个
+                   其次再看是否只有一个带参数的构造方法，如果有则使用它并自动装配
+                   再然后获取到所有非@Autowired注解的构造方法，并根据是否有@Primary注解和默认构造方法来决定使用具体的哪一个
            2. mbd.getResolvedAutowireMode() == AUTOWIRE_CONSTRUCTOR  => 此条件为使用后置处理器手动修改beanDefinition的自动装配的值, 默认为no
            3. mbd.hasConstructorArgumentValues()
                => 使用后置处理器手动添加beanDefinition中存放构造方法值的情形
