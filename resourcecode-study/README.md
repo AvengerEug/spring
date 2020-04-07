@@ -329,10 +329,11 @@
             }
         ```
 
-### 八. 使用ImportSelector注解和BeanPostProcessor后置处理器模拟aop
+### 八. 使用Import注解和BeanPostProcessor后置处理器模拟aop
   * 使用该方式可以手动开关aop功能
   * 具体核心在spring扫描解析类的时候, 会处理Import注解, 在处理Import注解时会处理如下三种情况
     1. 普通类
+    
     2. ImportSelector
        ```markdown
          处理ImportSelector类型情况是因为提供了AnnotationMetadata对象, 它可以获取到当前解析类的注解信息(它一定加了@Import注解)
@@ -341,7 +342,14 @@
          解(这个注解是自定义的, 具体可以参考此类[MyImportSelector.java](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/src/main/java/com/eugene/sumarry/resourcecodestudy/annocontext/registersimplebean/MyImportSelector.java))来返回一个数组(数组中包含一个BeanPostProcessor后置处理器, 此时这个后置处理器也会被加到bean工厂中去
          , 在创建bean的时候会被调用), 在后置处理器中再针对具体的类来创建代理对象, 至此, 完成了自定义的aop. 
        ```
+       
     3. ImportBeanDefinitionRegistrar
+    
+       ```txt
+       此类比较牛逼, 因为spring提供了一个BeanDefinitionRegistry, 这个类可以动态的添加beanDefinition, 我们可以指定具体某个类的自动装配模式，结合spring只为某些类型的bean自动装配的特性，我们可以为某个类不添加任何注解就将它交给spring处理，并完成自动装配, eg: mybatis的mapperFactoryBean以及自己实现的jwt-util jar包(连接: https://github.com/AvengerEug/permission-backend/blob/develop/jwt-util/src/main/java/com/eugene/sumarry/jwtutil/processor/ImportJWTRegistrar.java)
+       ```
+    
+       
 
 ### 九. spring在解析一个@Configuration标记的类时, 如何控制它不被解析
   * 手动将该类的beanDefinition标识为配置类(全配置类或者部分配置类都行)
@@ -388,7 +396,7 @@
     
 ### 十. spring自动装配注意事项, 以及spring默认不装配的几种类型
 
-  * spring自动装配原则
+  * spring自动装配原则(beanDefinition的`autowireMode`属性为`AbstractBeanDefinition接口中的AUTOWIRE_BY_NAME, AUTOWIRE_BY_TYPE和AUTOWIRE_CONSTRUCTOR`才会自动进行装配)
     
     * 获取当前类的beanDefinition并拿到MutablePropertyValues对象中所有手动添加的property,
       为了让spring不自动装配, eg: 我们自己要设置它
