@@ -455,7 +455,7 @@
     api中的beanName来决定return哪个bean。若api中的beanName包含&符号, 那么就返回FactoryBean即可，若不包含则返回
     FactoryBean中维护的bean, 即调用getObject方法。如果是第二次获取FactoryBean对象的话, 那么就会从一个名
     叫`factoryBeanObjectCache`的map中去取, 因为在第一次获取时, 会将这个对象放在这个map中, key为FactoryBean
-    的名称, 与spring容器中存储FactoryBean的名称一致, 只不过他们是存在不同的数据结构中
+    的名称, 与spring容器中存储FactoryBean的名称一致, 只不过他们是存在不同的数据结构中。`并且FactoryBean维护的bean不会走spring的生命周期，即不会回调类似InitializingBean接口的afterPropertiesSet()方法`
   
 
 ### 十二. spring事件驱动原理
@@ -694,13 +694,15 @@
 
 * 事务传播机制
 
-  | 事务类型 |                 特点                 | 备注 |
-  | :------: | :----------------------------------: | :--: |
-  | REQUIRED | 共享事务，若事务不存在则创建一个新的 | 默认 |
-  |          |                                      |      |
-  |          |                                      |      |
-  |          |                                      |      |
-
+  |   事务类型    |                             特点                             |          备注          |
+  | :-----------: | :----------------------------------------------------------: | :--------------------: |
+  |   REQUIRED    |    两个带有事务注解的方法共有，若事务不存在则创建一个新的    |          默认          |
+  | NOT_SUPPORTED |                          不支持事务                          |                        |
+  | REQUIRES_NEW  | 不管之前有没有事务，都会为开启一个新的事务，待新的事务执行完毕后，再执行之前的事务 |                        |
+  |   MANDATORY   |             必须在有事务的情况下执行，否则抛异常             | 此类型依赖于已有的事务 |
+|     NEVER     |   必须在一个没有的事务中执行,否则抛出异常(与MANDATORY相反)   |                        |
+  |   SUPPORTS    |    依赖于调用方是否开启事务，若调用方开启了事务则使用事务    |                        |
+  
   
 
 ### 十七. Spring bean初始化过程中涉及到的后置处理器、执行顺序及作用
