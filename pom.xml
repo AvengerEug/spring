@@ -21,6 +21,7 @@
         <module>implement-mapperscan</module>
         <module>mybatis</module>
         <module>spring-mvc</module>
+        <module>dynamic-mul-datasource</module>
     </modules>
 
     <artifactId>spring</artifactId>
