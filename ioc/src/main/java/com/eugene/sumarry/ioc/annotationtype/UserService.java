@@ -41,8 +41,12 @@ public class UserService implements InitializingBean {
      *
      * spring 单例与单例之间的循环引用是ok的, 但是如果相互引用的bean中有原型的scope对象的话, 那么会报错
      */
+    private static UserDao userDaoImpl1Eugene;
+
     @Autowired
-    private UserDao userDaoImpl1Eugene;
+    public void setUserDaoImpl1Eugene(UserDao userDaoImpl1Eugene) {
+        this.userDaoImpl1Eugene = userDaoImpl1Eugene;
+    }
 
     @Autowired
     private String name;
@@ -73,4 +77,6 @@ public class UserService implements InitializingBean {
         System.out.println("UserService 初始化结束(实现接口的方式), 会调此方法, 属性都已经注入进去");
         System.out.println("注解的执行顺序比实现接口的方式先执行");
     }
+
+
 }

@@ -10,3 +10,14 @@ CREATE TABLE user(
 
 INSERT INTO user(user_name, password) VALUES
 ('avenger', 'avenger');
+
+
+CREATE TABLE student1(
+  student_id INT PRIMARY KEY AUTO_INCREMENT,
+  student_name VARCHAR(255) DEFAULT NULL
+);
+
+CREATE TABLE student2(
+  student_id INT PRIMARY KEY AUTO_INCREMENT,
+  student_name VARCHAR(255) DEFAULT NULL
+);

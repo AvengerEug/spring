@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.eugene.sumarry.dynamic.mul.datasource.dao.Student1Dao">
+
+    <resultMap type="Student1" id="student1Map">
+        <id column="student_id" property="studentId"/>
+        <result column="student_name" property="studentName"/>
+    </resultMap>
+
+    <sql id="fields">
+        student_id, student_name
+    </sql>
+
+    <select id="list" parameterType="map" resultMap="student1Map">
+        SELECT
+        <include refid="fields"/>
+        FROM student1
+    </select>
+
+    <insert id="insert" parameterType="Student1">
+        INSERT INTO student1
+        (
+            student_name
+        )
+        VALUES
+        (
+            #{studentName}
+        )
+
+    </insert>
+
+    <update id="update" parameterType="Student1" >
+        UPDATE student1 SET student_name = #{studentName} WHERE student_id = #{studentId}
+    </update>
+
+</mapper>

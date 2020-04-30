@@ -2,7 +2,9 @@ package com.eugene.sumarry.dynamic.mul.datasource;
 
 import com.eugene.sumarry.dynamic.mul.datasource.config.AppConfig;
 import com.eugene.sumarry.dynamic.mul.datasource.model.User;
+import com.eugene.sumarry.dynamic.mul.datasource.service.Student1Service;
 import com.eugene.sumarry.dynamic.mul.datasource.service.UserService;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.util.UUID;
@@ -38,7 +40,7 @@ public class Entry {
         // 结论: 因为Requires new的机制是自己用自己的事务，
         // 但是spring并未针对每次的dao调用都去获取一次数据源，只会在第一次时获取
         // 并且在调用dao代码之前就会去获取。
-        userService.mulCaseRequiresNewTransaction(user);
+        // userService.mulCaseRequiresNewTransaction(user);
 
 
         // 结论, service方法中有开启事务，那么读写操作都会共用一个数据源
@@ -46,6 +48,23 @@ public class Entry {
         // 是在调用dao代码时才会去获取数据源，此时依赖的数据源可以由
         // 切面决定。否则Requires和Requires new类型在dao的切面的前面
         // 就获取了数据源
+
+        /**
+         * ----------------------------------------分隔符----------------------------------
+         */
+
+        Student1Service student1Service = context.getBean(Student1Service.class);
+        // 测试外部没有事务的方法调用， 具体结论查看方法内部
+        //student1Service.withoutAnyTransaction();
+
+        // 测试外部存在REQUIRED事务传播机制，具体结论查看方法内部
+        // student1Service.withRequiredTransaction();
+
+        // 测试外部存在NOT_SUPPORTED事务，具体结论参考方法内部
+        // student1Service.withNotSupportedTransaction();
+
+        // 测试外部存在NESTE事务，具体结论参考方法内部
+        student1Service.withNestedTransaction();
 
     }
 }

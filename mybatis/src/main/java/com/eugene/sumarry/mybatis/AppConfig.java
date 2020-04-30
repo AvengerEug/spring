@@ -49,6 +49,7 @@ public class AppConfig {
     @Bean
     public PlatformTransactionManager platformTransactionManager() {
         DataSourceTransactionManager manager = new DataSourceTransactionManager();
+
         manager.setDataSource(dataSource());
         return manager;
     }
