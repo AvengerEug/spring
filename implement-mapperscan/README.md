@@ -5,10 +5,10 @@
 ### 1.1 背景
 
   * @MapperScan功能: 指定添加了`@Mapper`注解的类的路径, 能够不写实现类就调用接口的方法
-  
+
 ### 1.2 执行原理
 
-![@MapperScan注解执行流程.png](https://github.com/AvengerEug/spring/blob/develop/implement-mapperscan/@MapperScan注解执行流程.png)
+![@MapperScan注解执行流程.png](./@MapperScan注解执行流程.png)
 
 ## 二、分析与解决方案
 

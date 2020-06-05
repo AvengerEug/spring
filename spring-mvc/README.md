@@ -27,10 +27,10 @@
 
 ## 二、启动流程图
 
-![启动流程图](https://github.com/AvengerEug/spring/blob/develop/spring-mvc/spring-mvc启动流程.png)
+![启动流程图](./spring-mvc启动流程.png)
 
 ## 三、执行请求流程图
 
-![执行请求流程图](https://github.com/AvengerEug/spring/blob/develop/spring-mvc/spring-mvc-请求执行流程.png)
+![执行请求流程图](./spring-mvc-请求执行流程.png)
 
 

@@ -1,20 +1,20 @@
 ## Spring源码学习
 
 ### 一. BeanFactory和FactoryBean的区别
-  * [Track to this repository](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/src/main/java/com/eugene/sumarry/resourcecodestudy/fbandbf/TestBeanFactory.java)
+  * [Track to this repository](./src/main/java/com/eugene/sumarry/resourcecodestudy/fbandbf/TestBeanFactory.java)
 
 ### 二. new AnnotationConfigApplicationContext(xxx.class)执行顺序
- ![执行顺序](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/spring%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95-%E5%86%85%E9%83%A8%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B.png)
+ ![执行顺序](./spring%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95-%E5%86%85%E9%83%A8%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B.png)
 
 ### 三. Spring 学习总结图
   #### 3.1 spring上下文环境
-   ![执行顺序](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/spring上下文环境.png)
+   ![执行顺序](./spring上下文环境.png)
 
   #### 3.2. BeanDefinition添加至工厂过程
-   ![执行顺序](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/beanDefinition注册过程.png)
+   ![执行顺序](./beanDefinition注册过程.png)
 
   #### 3.3 invokeBeanFactoryPostProcessors执行过程
-   ![执行顺序](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/invokeBeanFactoryPostProcessors执行过程.png)
+   ![执行顺序](./invokeBeanFactoryPostProcessors执行过程.png)
 
    * 源码注释
      ```java
@@ -184,7 +184,7 @@
 
    * 主要作用: 循环bean工厂所有的beanDefinition, 处理配置类(全配置类)和非配置类的beanDefinition
 
-   ![执行顺序](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/processConfigBeanDefinitions执行过程.png)
+   ![执行顺序](./processConfigBeanDefinitions执行过程.png)
 
 ### 四. AnnotationConfigApplicationContext
   * 注册单个bean(非java config类)
@@ -339,7 +339,7 @@
          处理ImportSelector类型情况是因为提供了AnnotationMetadata对象, 它可以获取到当前解析类的注解信息(它一定加了@Import注解)
          此时可以根据AnnotationMetadata对象来获取它拥有什么注解和什么方法。 重写的方法最后返回一个字符串数组， 这个字符串数组非常
          重要,内部元素是一个类的全类名, spring会根据这个全类名把这个类也加入到spring容器中去, 所以可以根据解析类是否添加@EnableProxy注
-         解(这个注解是自定义的, 具体可以参考此类[MyImportSelector.java](https://github.com/AvengerEug/spring/blob/develop/resourcecode-study/src/main/java/com/eugene/sumarry/resourcecodestudy/annocontext/registersimplebean/MyImportSelector.java))来返回一个数组(数组中包含一个BeanPostProcessor后置处理器, 此时这个后置处理器也会被加到bean工厂中去
+         解(这个注解是自定义的, 具体可以参考此类[MyImportSelector.java](./src/main/java/com/eugene/sumarry/resourcecodestudy/annocontext/registersimplebean/MyImportSelector.java))来返回一个数组(数组中包含一个BeanPostProcessor后置处理器, 此时这个后置处理器也会被加到bean工厂中去
          , 在创建bean的时候会被调用), 在后置处理器中再针对具体的类来创建代理对象, 至此, 完成了自定义的aop. 
        ```
        

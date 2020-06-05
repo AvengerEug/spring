@@ -74,11 +74,11 @@
 
 ### 4.1 @MapperScan注解执行流程
 
-![@MapperScan注解执行流程](https://github.com/AvengerEug/spring/blob/develop/mybatis/@MapperScan注解执行流程.png)
+![@MapperScan注解执行流程](./@MapperScan注解执行流程.png)
 
 ### 4.2 mybatis环境初始化流程
 
-![@mybatis环境初始化流程](https://github.com/AvengerEug/spring/blob/develop/mybatis/mybatis环境初始化流程.png)
+![@mybatis环境初始化流程](./mybatis环境初始化流程.png)
 
 ## 五、mybatis使用的是采用构造方法来实现对MapperFactoryBean的自动装配的
 ```java
