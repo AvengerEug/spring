@@ -1,7 +1,7 @@
 ## Spring源码学习
 
 ### 一. BeanFactory和FactoryBean的区别
-  * [Track to this repository](./src/main/java/com/eugene/sumarry/resourcecodestudy/fbandbf/TestBeanFactory.java)
+  * [Track to this repository](./src/main/java/com/eugene/sumarry/resourcecodestudy/fbandbf/TestBeanFactoryBean.java)
 
 ### 二. new AnnotationConfigApplicationContext(xxx.class)执行顺序
  ![执行顺序](./spring%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95-%E5%86%85%E9%83%A8%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B.png)
@@ -706,7 +706,6 @@
   |   SUPPORTS    |    依赖于调用方是否开启事务，若调用方开启了事务则使用事务    |                                                              |
   |    NESTED     | 如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则会开启事务 | 1. 外围方法无事务时，和REQUIRED类似，会开启一个<br>2. 外围方法有事务时，外围抛出的异常会影响整体的事务，内部的子事务可以影响自己。 |
   
-  
 
 ### 十七. Spring bean初始化过程中涉及到的后置处理器、执行顺序及作用
 
@@ -800,7 +799,7 @@
          }
          ```
 
-### 十九、Spring Mvc处理请求流程
+### 十九、Spring MVC处理请求流程
 
 1. 浏览器输入url: **localhost:8080/index?userName=eugene**
 2. 进入DispacherServlet的doService方法
