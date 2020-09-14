@@ -665,8 +665,20 @@
 
 ### 十六. spring事务管理原理与自定义事务
   * spring开启事务步骤
-    1. 添加`@EnableTransactionManagement`注解开启事务管理
+    1. 添加`@EnableTransactionManagement`注解开启事务管理，其中有如下细节：
+    
+       > ```txt
+       > @EnableTransactionManagement(proxyTargetClass = false)
+       > 此注解如果不手动指定proxyTargetClass为true，那么默认使用的jdk动态代理来创建对象
+       > 1、在没有指定proxyTargetClass为false时
+       >   1.1）、如果目标对象实现了接口，此时则使用jdk动态代理
+       >   1.2）、如果目标对象未实现接口，此时使用的时cglib代理
+       > 2、在没有指定proxyTargetClass为true时
+       >   1.1)、直接使用cglib代理
+       > ```
+    
     2. 添加事务管理器的bean, eg: `DataSourceTransactionManager`
+    
     3. 在方法或类中添加`@Transactional`注解(可配置rollbackForClassName指定回滚的类型)
     
   * 原理:
@@ -689,8 +701,14 @@
 * 相关总结：
 
   ```txt
-  1. 事务生效的情况：
-    不管是使用cglib的代理还是jdk的动态代理，最终只有public修饰的方法才能享用事务。
+  1. 事务不生效的情况：
+    A. 不管是使用cglib的代理还是jdk的动态代理，最终只有public修饰的方法才能享用事务，因此，非public修饰的方法的事务是不生效的
+    B. 在无声明式事务的方法上调用有声明式事务的方法，此时有声明式事务的事务不会生效，原因是此时的this不是代理对象，而是目标对象
+    C. 目标对象的方法中，无将异常抛出去，代理类感知不到异常，认为成功了
+    D. 数据库引擎不支持事务
+    E. 对象没有交给spring管理
+    
+    
   2. 事务的功能是代理类来实现的，即代理类对方法进行了增强，所以如果一个不带事务注解的方法调用一个带事务注解的方法，这种情况下也是不生效的。因为调用不带事务注解的方法时，代理类中并没有增强方法(添加开启事务、提交事务、回滚事务的相关方法)，所以最终还是要用目标对象去调用自己的方法，所以此时就算调用了带了事务注解的方法，也不会有事务，因为当前的this为目标对象
   ```
 
