@@ -40,6 +40,10 @@
             <version>5.0.8.RELEASE</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+        </dependency>
 
     </dependencies>
 
