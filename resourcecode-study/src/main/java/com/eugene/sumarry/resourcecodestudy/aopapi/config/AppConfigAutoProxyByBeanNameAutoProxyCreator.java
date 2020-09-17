@@ -10,8 +10,7 @@ import org.springframework.context.annotation.FilterType;
 @ComponentScan(value = "com.eugene.sumarry.resourcecodestudy.aopapi",
     excludeFilters = {
             @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = AppConfigByProxyFactoryBean.class),
-            @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = AppConfigAutoProxyByDefaultAdvisorAutoProxyCreator.class),
-            @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = AppConfigAutoProxyByAnnotationAwareAspectJAutoProxyCreator.class),
+            @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = AppConfigAutoProxyByDefaultAdvisorAutoProxyCreator.class)
     }
 )
 public class AppConfigAutoProxyByBeanNameAutoProxyCreator {
