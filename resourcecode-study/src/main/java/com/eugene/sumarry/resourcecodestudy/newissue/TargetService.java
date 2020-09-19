@@ -1,10 +1,8 @@
 package com.eugene.sumarry.resourcecodestudy.newissue;
 
-import org.springframework.context.annotation.Primary;
-
 import javax.annotation.Priority;
 
-@Primary
+@Priority(12)
 public class TargetService {
 
     public void testAopApi() {

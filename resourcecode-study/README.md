@@ -834,14 +834,14 @@
 >
 > ```java
 > public class AppConfig {
->     @Bean
->     public ProxyFactoryBean proxyFactoryBean(TargetService targetService) {
->         ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
->         proxyFactoryBean.setProxyTargetClass(true);
->         proxyFactoryBean.setTarget(targetService);
->         proxyFactoryBean.setInterceptorNames("myBeforeAdvice");
->         return proxyFactoryBean;
->     }
+>  @Bean
+>  public ProxyFactoryBean proxyFactoryBean(TargetService targetService) {
+>      ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
+>      proxyFactoryBean.setProxyTargetClass(true);
+>      proxyFactoryBean.setTarget(targetService);
+>      proxyFactoryBean.setInterceptorNames("myBeforeAdvice");
+>      return proxyFactoryBean;
+>  }
 > }
 > 
 > ```
@@ -849,10 +849,10 @@
 > ```java
 > public class MyBeforeAdvice implements MethodBeforeAdvice {
 > 
->     @Override
->     public void before(Method method, Object[] args, Object target) throws Throwable {
->         System.out.println("before invoke method [ " + method.getName() + " ], aop before logic invoked");
->     }
+>  @Override
+>  public void before(Method method, Object[] args, Object target) throws Throwable {
+>      System.out.println("before invoke method [ " + method.getName() + " ], aop before logic invoked");
+>  }
 > }
 > ```
 >
@@ -860,31 +860,32 @@
 > @Priority(12)
 > public class TargetService {
 > 
->     public void testAopApi() {
->         System.out.println("testAopApi has invoked");
->     }
+>  public void testAopApi() {
+>      System.out.println("testAopApi has invoked");
+>  }
 > }
 > ```
 >
 > ```java
 > public class Entry {
 > 
->     public static void main(String[] args) {
->         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
->                 TargetService.class,
->                 MyBeforeAdvice.class,
->                 AppConfig.class);
+>  public static void main(String[] args) {
+>      AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
+>              TargetService.class,
+>              MyBeforeAdvice.class,
+>              AppConfig.class);
 > 
->         context.getBean(TargetService.class).testAopApi();
->     }
+>      context.getBean(TargetService.class).testAopApi();
+>  }
 > }
 > ```
 >
 > I need to get the proxy bean of TargetService type by "getBean(Class<T> requiredType)" api, but it throws following exception:
 >
 > ```java
-> Exception in thread "main" org.springframework.beans.factory.NoUniqueBeanDefinitionException: No qualifying bean of type 'com.eugene.sumarry.resourcecodestudy.newissue.TargetService' available: expected single matching bean but found 2: targetService,proxyFactoryBean
-> 	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveNamedBean(DefaultListableBeanFactory.java:1036)
+> Exception in thread "main" org.springframework.beans.factory.NoUniqueBeanDefinitionException: No qualifying bean of type 'com.eugene.sumarry.resourcecodestudy.newissue.TargetService' available: Multiple beans found with the same priority ('12') among candidates: [targetService, proxyFactoryBean]
+> 	at org.springframework.beans.factory.support.DefaultListableBeanFactory.determineHighestPriorityCandidate(DefaultListableBeanFactory.java:1421)
+> 	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveNamedBean(DefaultListableBeanFactory.java:1027)
 > 	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBean(DefaultListableBeanFactory.java:338)
 > 	at org.springframework.beans.factory.support.DefaultListableBeanFactory.getBean(DefaultListableBeanFactory.java:333)
 > 	at org.springframework.context.support.AbstractApplicationContext.getBean(AbstractApplicationContext.java:1107)
@@ -897,11 +898,11 @@
 > // org.springframework.beans.factory.support.DefaultListableBeanFactory#resolveNamedBean(java.lang.Class<T>, java.lang.Object...)
 > String candidateName = determinePrimaryCandidate(candidates, requiredType);
 > if (candidateName == null) {
->     candidateName = determineHighestPriorityCandidate(candidates, requiredType);
+>  candidateName = determineHighestPriorityCandidate(candidates, requiredType);
 > }
 > ```
 >
-> When I replace the @Priority(12) with the @Primary annotation, this problem can be solved perfectly. But, when I try to using the @Priority annotation to dealing with the problem, I don't know how to solve, because I cannot add @Priority annotation to proxy object. After a lot of testing, I found that this is indeed a problem. When FactoryBean proxy the bean in the spring container, we will get an above exception if we use "getBean(Class<T> requiredType)" api to get the bean.
+> When I replace the @Priority(12) with the @Primary annotation, this problem can be solved perfectly. **But, when I try to using the @Priority annotation to dealing with the problem, I don't know how to solve, because I cannot add @Priority annotation to proxy object**. After a lot of testing, I found that this is indeed a problem. When FactoryBean proxy the bean in the spring container, we will get an above exception if we use "getBean(Class<T> requiredType)" api to get the bean.
 
 
 
