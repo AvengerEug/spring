@@ -277,7 +277,8 @@
     
         }
     ```
-    
+* 其实它的原理就是：spring在创建好bean后会执行BeanPostProcessor后置处理器，其中有一个后置处理器叫：**ApplicationContextAwareProcessor**，它专门用来处理bean中实现了各种aware接口的逻辑，可以利用此后置处理器来为bean填充spring上下文对象等其他需要获取其他aware接口的功能。
+
 ### 七. 第一次调用BeanFactoryPostProcessor后置处理器的注意点
 
   * 调用链如下：
