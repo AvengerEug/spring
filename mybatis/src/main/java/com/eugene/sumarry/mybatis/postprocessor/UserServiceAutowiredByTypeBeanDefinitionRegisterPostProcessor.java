@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
  *   将UserService的beanDefinition标示为byType, 使用此方式后只需要给属性提供set方法即可完成
  *   自动装配(不需要@Autowired注解)
  *
- * 当然, 要是先这样的功能的后置处理器有很多
+ * 当然, 要实现这样的功能的后置处理器有很多
  * 1. 以@ComponentBeanDefinitionRegistryPostProcessor类型且实现了
  *     Ordered接口的后置处理器
  * 2. 以@ComponentBeanDefinitionRegistryPostProcessor类型没实现

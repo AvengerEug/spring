@@ -90,14 +90,15 @@
     }
 ```
 
-* 具体在于上述一段代码, 第一行是获取写到@Autowired注解的构造方法, 很显然, 
-  MapperFactoryBean中无构造方法添加了@Autowired注解，
-  主要是这个判断`mbd.hasConstructorArgumentValues()`, mybatis针对每个
+* 具体在于上述一段代码, 第一行是获取到@Autowired注解的构造方法, 很显然, 
+  MapperFactoryBean中没有构造方法添加了@Autowired注解，因此第一行代码没什么作用。
+  主要是后面代码的作用：`mbd.hasConstructorArgumentValues()`, mybatis针对每个
   MapperFactoryBean都添加了一个构造方法会用上的值(dao层接口的class字符串)
   , 源码为如下
     ```java
       definition.getConstructorArgumentValues().addGenericArgumentValue(definition.getBeanClassName()); // issue #59
     ```
+  这行代码的主要作用就是告诉spring使用带参的构造方法初始化bean
 
 ## 六、spring事务管理流程
   * @Transactional注解可以添加在类中也可以添加在方法中, 若添加在类中则对类中的所有方法
