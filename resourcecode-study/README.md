@@ -903,5 +903,10 @@
 >
 > When I replace the @Priority(12) with the @Primary annotation, this problem can be solved perfectly. **But, when I try to using the @Priority annotation to dealing with the problem, I don't know how to solve, because I cannot add @Priority annotation to proxy object**. After a lot of testing, I found that this is indeed a problem. When FactoryBean proxy the bean in the spring container, we will get an above exception if we use "getBean(Class<T> requiredType)" api to get the bean.
 
+### 二十一、@PostConstruct 与 BeanPostProcessor的before和after、InitializingBean的afterPropertiesSet的执行顺序
 
+* 此操作org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory#applyBeanPostProcessorsBeforeInitialization，调用后置处理器org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor#postProcessBeforeInitialization 执行@PostConstruct注解标识的方法，隶属于BeanPostProcessor的before操作。
+* 此操作org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory#invokeInitMethods调用InitializingBean扩展点的afterPropertiesSet方法
+* 最后才是：BeanPostProcessor的before和after
+* 因此最终的调用顺序是：**@PostConstruct  > InitializingBean > BeanPostProcessor#before > BeanPostProcessor#after** 。调用这些扩展点时，bean的依赖注入已经完成。前面两个扩展点：@PostConstruct和InitializingBean只能做一些额外处理，无法处理bean。而BeanPostProcessor可以利用before和after对bean做一些额外处理。
 

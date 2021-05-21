@@ -4,10 +4,10 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CustomerEventListener implements ApplicationListener<CustomerEvent> {
+public class CustomerEventListener2 implements ApplicationListener<CustomerEvent> {
 
     @Override
     public void onApplicationEvent(CustomerEvent event) {
-        System.out.println(event + "-------------1");
+        System.out.println(event + "----------------2");
     }
 }

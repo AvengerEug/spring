@@ -14,5 +14,6 @@ public class Test {
         context.register(AppConfig.class);
         context.refresh();
         System.out.println(context);
+
     }
 }

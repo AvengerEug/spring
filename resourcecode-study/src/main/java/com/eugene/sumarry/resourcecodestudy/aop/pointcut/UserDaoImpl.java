@@ -9,4 +9,8 @@ public class UserDaoImpl implements UserDao {
     public void test() {
         System.out.println("test");
     }
+
+    public void testPrivate() {
+        System.out.println("private");
+    }
 }
