@@ -9,6 +9,6 @@ public class Entry {
     public static void main(String[] args) {
         System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "D://");
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
-        context.getBean(UserService.class).list();
+        context.getBean(UserService.class).update();
     }
 }

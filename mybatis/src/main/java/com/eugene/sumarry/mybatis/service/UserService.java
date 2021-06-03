@@ -2,7 +2,7 @@ package com.eugene.sumarry.mybatis.service;
 
 import com.eugene.sumarry.mybatis.dao.UserDao;
 import com.eugene.sumarry.mybatis.dao.UserDao1;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +12,9 @@ public class UserService {
     UserDao userDao;
 
     UserDao1 userDao1;
+
+    @Autowired
+    private TransactionLifecyclePostProcessor transactionLifecyclePostProcessor;
 
     public void setUserDao(UserDao userDao) {
         this.userDao = userDao;
@@ -47,6 +50,6 @@ public class UserService {
     @Transactional(rollbackFor = Exception.class)
     public void update() {
         userDao1.update();
-        int x = 9 / 0;
+        transactionLifecyclePostProcessor.test();
     }
 }
