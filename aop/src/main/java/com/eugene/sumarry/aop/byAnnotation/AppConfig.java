@@ -21,8 +21,12 @@ import org.springframework.stereotype.Component;
  *
  * jdk动态代理是基于接口来生成代理对象的原因:
  *  因为jdk动态代理生成的对象中已经继承Proxy类了, 因为java的单继承特性, 所有只能采用实现接口的方式来产生代理对象
+ *
+ *
+ * exposeProxy = true ===> 代表着要暴露出代理对象，这是什么意思呢？意思就是在执行代理对象方法时（得需要是），
+ *
  */
-@EnableAspectJAutoProxy(proxyTargetClass = true)
+@EnableAspectJAutoProxy(proxyTargetClass = true, exposeProxy = true)
 @Component
 @ComponentScan("com.eugene.sumarry.aop.byAnnotation")
 public class AppConfig {

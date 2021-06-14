@@ -8,7 +8,7 @@
   4. 通知(Advice): 需要增强的地方
   5. 目标对象(Target): 需要被代理的对象
   6. 代理对象(Proxy): 代理目标对象的对象
-  
+
 ---
 ### 如何定义一个切面(spring 5.x)
   1. 启动AspectJ语法。添加`@EnableAspectJAutoProxy`注解(一般在项目入口添加)
@@ -45,7 +45,7 @@
      ```
   5. 至此, 一个切面就完成了, 这个切面切了`com.eugene.sumarry.aop.byAnnotation.dao`包及子包下的所有方法。
 
---- 
+---
 ### 切点的表达式
   1. execution: 官网推荐的最常用的方式, 因为其粒度最低, 可以精确到具体的某一个方法
      ```java
@@ -148,7 +148,7 @@
   2. jdk 动态代理基于接口产生的原因:
      * jdk动态代理生成的代理类中已经`默认继承Proxy类`了, `由于java单继承的特性, 所有只能基于接口生成代理类了`
 
---- 
+---
 ### 创建原型代理对象
   ```java
     /**
@@ -188,7 +188,7 @@
         }
     }
   ```
-  
+
 ---
 ### 强制将一个类转成毫无关系的类型
   ```java
@@ -246,11 +246,31 @@
         <bean id="userDao" class="com.eugene.sumarry.aop.byXML.UserDao"/>
         <bean id="studentDao" class="com.eugene.sumarry.aop.byXML.StudentDao"/>
     </beans>
-  ```
+   ```
   * 注意: 虽然类被强制实现了接口, 但是`copy的原生的逻辑而不是代理后增强的逻辑`, 同时要开启`cglib`代理才能实现这一功能
-  
+
 ---
 ### Spring AOP和AspectJ的关系
   1. Spring AOP可以支持AspectJ的语法, 使用`@EnableAspectJAutoProxy`注解声明
   2. AspectJ是静态织入, 在编译成字节码文件时就被增强了。
      Spring AOP是运行时织入, 在运行时才对类进行增强
+
+### Spring在代理对象在执行目标对象方法时，如何才能执行到代理对象的逻辑呢？
+
+* 举个例子：我对目标对象ObjectA的methodA和methodB方法做了代理，然后我现在要在当前方法内部调用methodA方法，要求能执行到代理对象的methodB方法的逻辑。
+
+* 通常的两个解决方案：
+
+  ```txt
+  1、在ObjectA中，依赖注入自己（注入的自己是一个代理对象）
+  2、使用spring上下文中，获取ObjectA bean（因为这个bean是一个代理对象），
+  ```
+
+* 现在有一个比较nice的解决方案，其步骤如下：
+
+  ```txt
+  1、在@EnableAspectJAutoProxy注解中指定exposeProxy属性为true ---> 这代表着当代理对象要执行对应的方法时，若这个属性为true，则会把这个代理对象放到一个threadLocal中，这样我们就可以使用AopContext.currentProxy();方法获取到代理对象了。
+  2、在methodA方法中调用((ObjectA)AopContext.currentProxy()).methodB(); 方法即可。但前提是：调用methodA和methodB方法时，得位于同一个线程才行，因为代理对象是 暴露在 线程级别的。跨线程后，无法访问了。
+  ```
+
+  这个比较nice的解决方案，还有一个

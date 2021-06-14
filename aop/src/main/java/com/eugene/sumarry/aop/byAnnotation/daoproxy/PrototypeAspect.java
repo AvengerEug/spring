@@ -9,14 +9,14 @@ import org.springframework.stereotype.Component;
 
 /**
  * 1. @Scope("prototype")表示每次获取的代理对象都是原型的
- * 2. ("perthis(this(com.eugene.sumarry.aop.main.daoproxy.PrototypeDao))")
- *    表示当代理对象的类型是com.eugene.sumarry.aop.main.daoproxy.PrototypeDao
+ * 2. ("perthis(this(com.eugene.sumarry.aop.byAnnotation.daoproxy.PrototypeDao))")
+ *    表示当代理对象的类型是com.eugene.sumarry.aop.byAnnotation.daoproxy.PrototypeDao
  *    时, 代理对象是原型的, 其它的为单例的
  * 3. 每一次获取PrototypeDao类型的bean的时候, 代理对象都是最新的.
  * 4. 当目标对象是单例的, 但是代理对象是原型的, 在ProceedingJoinPoint类中获取代理对象和目标对象都是最新的。
  */
 @Component
-@Aspect("perthis(this(com.eugene.sumarry.aop.main.daoproxy.PrototypeDao))")
+@Aspect("perthis(this(com.eugene.sumarry.aop.byAnnotation.daoproxy.PrototypeDao))")
 @Scope("prototype")
 public class PrototypeAspect {
 
