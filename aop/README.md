@@ -274,3 +274,16 @@
   ```
 
   这个比较nice的解决方案，还有一个
+
+### spring 内部aop的实现采用的是动态代理 + 责任链设计模式实现的
+
+* spring aop的返回通知是什么？ 根据源码中的设计来讲，如果目标方法抛了异常，那么是不会执行返回通知的逻辑的（详细看AfterRunningAdviceInterceptor.java类）。原因是在责任链的顶端有一个检验抛异常的链A，因为返回通知是在执行外目标方法后执行完的，如果在执行目标方法的过程中抛异常了，那么会被链A给捕捉到，进而无法执行到**返回通知**
+* 整个责任链的链路过程是这样的：ExposeInvocationInterceptor -> AspectJAfterThrowingAdvice（异常通知） -> AfterRunningAdviceInterceptor（内部对目标方法的逻辑做了try catch的逻辑） -> AfterReturnAdvice（在执行目标方法后，同步执行**返回通知**逻辑，但由于是责任链的设计模式，如果此链路执行目标方法时发生了异常，那么就会向上抛，最终会被AfterRunningAdviceInterceptor捕捉到）-> AspectJAfterAdvice（在此链路上执行了try finally的逻辑，而finally中执行的就是后置通知，因此我们的后置通知一定会被执行。） -> MethodBeforeAdvice（执行before的逻辑） 
+* 异常通知和返回通知是互斥的，有异常通知就不会有返回通知，有返回通知就不会有异常通知
+
+### spring aop代理方式推断
+
+* 默认使用的是jdk动态代理的方式。若目标类没有实现接口，或者在@EnableAspectJAutoProxy注解中有指定使用的是cglib类，则会使用cglib代理
+* spring的aop后置处理器(InstantiationAwareBeanPostProcessors)做了哪些事情：
+  * before：找到增强器（eg：@Before、@After、返回通知、异常通知等等）
+  * after：创建代理对象，把我们的增强器放到代理对象中去
