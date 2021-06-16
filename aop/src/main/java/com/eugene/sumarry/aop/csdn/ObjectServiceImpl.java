@@ -16,6 +16,7 @@ public class ObjectServiceImpl implements ObjectService {
     @Entry.AspectAnnotation
     @Override
     public String findOne() {
+        int x = 1 / 0;
         return "avengerEug";
     }
 }
