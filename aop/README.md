@@ -287,3 +287,12 @@
 * spring的aop后置处理器(InstantiationAwareBeanPostProcessors)做了哪些事情：
   * before：找到增强器（eg：@Before、@After、返回通知、异常通知等等）
   * after：创建代理对象，把我们的增强器放到代理对象中去
+
+### spring 事务机制
+
+* @Transaction注解不管是添加到方法上、类上、接口上、接口定义的方法上，事务都能生效。其主要原因是spring在扫描@Transaction注解时有这么一个寻找顺序：**实现类的方法 -> 实现类 -> 接口的方法 -> 接口**。即先从实现类的方法上面找，然后再到实现类上找，然后再到接口的方法上找，最后到接口上找@Transaction注解
+
+* spring的事务中，有一个叫**TransactionSynchronizationManager**的事务同步管理器，其内部的核心就是存在非常多的ThreadLocal变量，比如：当前线程绑定的事务名称、事务隔离级别、事务同步器（可以添加事务各个生命周期添加对应的钩子函数）等数据。但需要注意的是，它是线程级别的，如果跨线程了，这些东西就都获取不到了
+* spring的事务执行过程：@EnableTransactionManagement注解中导入了ProxyTransactionManagementConfiguration和AutoProxyRegistrar（假设为jdk动态代理的方式），而ProxyTransactionManagementConfiguration内部导入了BeanFactoryTransactionAttributeSourceAdvisor、TransactionAttributeSource、TransactionInterceptor。而AutoProxyRegistrar导入了apo的创建器：InfrastructureAdvisorAutoProxyCreator。其中，BeanFactoryTransactionAttributeSourceAdvisor是事务的增强器（这里比aop要好，aop需要循环所有的类找到对应的切面，并把切面对应的增强行为的函数都封装成增强器，而这里是直接定义了），TransactionAttributeSource是事务属性资源，保存的是事务相关的属性，最后的TransactionInterceptor就是事务的拦截器了，最终会执行到这个拦截器，在这个拦截器内部再使用BeanFactoryTransactionAttributeSourceAdvisor来执行对应的事务逻辑以及TransactionAttributeSource来保存事务相关的属性。
+
+### 目标：写一个spring aop系列的博客，内容包含：aop的使用方式（before、after、返回通知、异常通知的执行结果和顺序）、spring是如何找到切面以及对应的切面增强方法并把它们转化成一系列的拦截器、spring aop的执行顺序、spring aop事务的使用案例（以传播机制为REQUIRED_NEW为例子）来讲解spring 事务的执行顺序。一共：4篇文章。
