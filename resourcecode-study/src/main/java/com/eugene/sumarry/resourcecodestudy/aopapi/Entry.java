@@ -8,7 +8,7 @@ import com.eugene.sumarry.resourcecodestudy.aopapi.config.AppConfigAutoProxyByBe
 import com.eugene.sumarry.resourcecodestudy.aopapi.config.AppConfigAutoProxyByDefaultAdvisorAutoProxyCreator;
 import com.eugene.sumarry.resourcecodestudy.aopapi.config.AppConfigByProxyFactoryBean;
 import com.eugene.sumarry.resourcecodestudy.aopapi.pointcut.MyPointcut;
-import com.eugene.sumarry.resourcecodestudy.aopapi.target.TargetService;
+import com.eugene.sumarry.resourcecodestudy.newissue.TargetService;
 import org.springframework.aop.Advisor;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.aop.support.DefaultPointcutAdvisor;

@@ -47,12 +47,15 @@
   
   第二个阶段：
   在aopProxyCreator这个bean创建后（已经加入spring容器），后续创建出来的所有bean在执行到AnnotationAwareAspectJAutoProxyCreator后置处理器时是按照如下顺序执行的：
+  
   InstantiationAwareBeanPostProcessor#postProcessBeforeInstantiation
     > SmartInstantiationAwareBeanPostProcessor#determineCandidateConstructors
       > InstantiationAwareBeanPostProcessor#postProcessAfterInstantiation
         > BeanPostProcessor#postProcessBeforeInitialization
           > BeanPostProcessor#postProcessAfterInitialization
   ```
+  
+  但实际上，只有InstantiationAwareBeanPostProcessor#postProcessBeforeInstantiation和BeanPostProcessor#postProcessAfterInitialization这两个方法的实现和aop有关系。因此，我们着重分析下这两个方法。
 
 ##### 1.3 AnnotationAwareAspectJAutoProxyCreator的postProcessBeforeInstantiation做了什么事
 
@@ -92,13 +95,17 @@
   	}
   ```
 
-  @1处的代码比较核心，其主要逻辑是：判断当前bean是否为基础类（Advice.class、Pointcut.class、Advisor.class、AopInfrastructureBean.class），如果不是基础类的话，会执行**shouldSkip**方法的逻辑，在这个方法中，会去找当前bean的所有**通知**。那这个找通知的过程是如何执行的呢？这里的源码执行逻辑比较复杂，我们可以看下图：
+* @1处的代码比较核心，其主要逻辑是：判断当前bean是否为基础类（Advice.class、Pointcut.class、Advisor.class、AopInfrastructureBean.class），如果不是基础类的话，会执行**shouldSkip**方法的逻辑，在这个方法中，会去找当前bean的所有**通知**。那这个找通知的过程是如何执行的呢？这里的源码执行逻辑比较复杂，我们可以先看结果：
 
   ![找出当前bean对应的所有通知.png](找出当前bean对应的所有通知.png)
 
-  在此方法执行完毕后，我们已经把AspectDefinition.java这个类中定义的各种通知已经找出来了，并且转化成Advisor的类型，存在了一个list中。
+  在此方法执行完毕后，我们已经把AspectDefinition.java这个类中定义的各种通知已经找出来了，并且转化成Advisor的类型，存在了一个list中，那这一步spring到底是怎么做的呢？我们画图来详细分析下shouldSkip方法的执行流程：
 
-  
+  ![AnnotationAwareAspectJAutoProxyCreator是如何找到切面对应的通知的.png](AnnotationAwareAspectJAutoProxyCreator是如何找到切面对应的通知的.png)
 
-  @2处的代码是自定义代理对象逻辑，我们很少用到，直接跳过。
+  根据图中的分析可知，当shouldSkip方法执行完毕后，整个spring容器中所有的切面中定义的**通知**都会被缓存到内存中，大家可能会有疑惑，我怎么知道**哪个**通知适用于哪个切点呢？还记得在将通知转换成AspectJExpressionPointcut时有保存每个通知中的表达式吧？eg：`@After(value = "pointcutAnnotation()")  将获取到里面的 pointcutAnnotation() 字符串`。有了这个的话，我在找对应关系时，我看下哪个切点的方法名是这个，不就对应上了吗？
 
+* @2处的代码是自定义代理对象逻辑，我们很少用到，直接跳过。
+* 结论：AnnotationAwareAspectJAutoProxyCreator的postProcessBeforeInstantiation方法的主要核心在于将容器中所有的切面对应的切点都扫描出来并转化成InstantiationModelAwarePointcutAdvisorImpl并缓存起来了。一种预热机制，先把数据准备好，后续需要时直接再从缓存中拿。
+
+##### 1.4 BeanPostProcessor#postProcessAfterInitialization做了什么事
