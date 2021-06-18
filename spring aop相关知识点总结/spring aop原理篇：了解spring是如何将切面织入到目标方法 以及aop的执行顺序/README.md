@@ -4,9 +4,9 @@
 
 * 在上篇文章[spring aop使用篇：熟悉使用前置通知、后置通知、返回通知、异常通知，并了解其特性](1)中我们知道了如何使用aop以及其的一些特性，同时还提出来的如下所述的疑问点：
 
-  > 1、源码中是如何将我们定义的各种通知与目标方法绑定起来的
-  > 2、我们的aop代理对象的执行顺序是怎样的
-  > 3、aop代理对象生成的策略
+  > 1、源码中是如何将我们定义的各种通知与目标方法绑定起来的  --> 若想急切知道答案，可直接看1.3章节
+  > 2、我们的aop代理对象的执行顺序是怎样的 
+  > 3、aop代理对象生成的策略   --> 若想急切知道答案，可直接看1.4章节
 
   接下来，我们继续以上篇文章的例子为例，从源码的角度来分析这三个点。废话不多说，直接开干！
 
@@ -62,37 +62,37 @@
 * 其源码及注释如下所示：
 
   ```java
-      @Override
-  	public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {
-  		Object cacheKey = getCacheKey(beanClass, beanName);
+  @Override
+  public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {
+      Object cacheKey = getCacheKey(beanClass, beanName);
   
-  		if (!StringUtils.hasLength(beanName) || !this.targetSourcedBeans.contains(beanName)) {
-  			if (this.advisedBeans.containsKey(cacheKey)) {
-  				return null;
-  			}
+      if (!StringUtils.hasLength(beanName) || !this.targetSourcedBeans.contains(beanName)) {
+          if (this.advisedBeans.containsKey(cacheKey)) {
+              return null;
+          }
   
-  			if (isInfrastructureClass(beanClass) || shouldSkip(beanClass, beanName)) {  // @1
-  				this.advisedBeans.put(cacheKey, Boolean.FALSE);
-  				return null;
-  			}
-  		}
+          if (isInfrastructureClass(beanClass) || shouldSkip(beanClass, beanName)) {  // @1
+              this.advisedBeans.put(cacheKey, Boolean.FALSE);
+              return null;
+          }
+      }
   
-  		// Create proxy here if we have a custom TargetSource.
-  		// Suppresses unnecessary default instantiation of the target bean:
-  		// The TargetSource will handle target instances in a custom fashion.
-  		TargetSource targetSource = getCustomTargetSource(beanClass, beanName); // @2
-  		if (targetSource != null) {
-  			if (StringUtils.hasLength(beanName)) {
-  				this.targetSourcedBeans.add(beanName);
-  			}
-  			Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(beanClass, beanName, targetSource);
-  			Object proxy = createProxy(beanClass, beanName, specificInterceptors, targetSource);
-  			this.proxyTypes.put(cacheKey, proxy.getClass());
-  			return proxy;
-  		}
+      // Create proxy here if we have a custom TargetSource.
+      // Suppresses unnecessary default instantiation of the target bean:
+      // The TargetSource will handle target instances in a custom fashion.
+      TargetSource targetSource = getCustomTargetSource(beanClass, beanName); // @2
+      if (targetSource != null) {
+          if (StringUtils.hasLength(beanName)) {
+              this.targetSourcedBeans.add(beanName);
+          }
+          Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(beanClass, beanName, targetSource);
+          Object proxy = createProxy(beanClass, beanName, specificInterceptors, targetSource);
+          this.proxyTypes.put(cacheKey, proxy.getClass());
+          return proxy;
+      }
   
-  		return null;
-  	}
+      return null;
+  }
   ```
 
 * @1处的代码比较核心，其主要逻辑是：判断当前bean是否为基础类（Advice.class、Pointcut.class、Advisor.class、AopInfrastructureBean.class），如果不是基础类的话，会执行**shouldSkip**方法的逻辑，在这个方法中，会去找当前bean的所有**通知**。那这个找通知的过程是如何执行的呢？这里的源码执行逻辑比较复杂，我们可以先看结果：
@@ -108,4 +108,173 @@
 * @2处的代码是自定义代理对象逻辑，我们很少用到，直接跳过。
 * 结论：AnnotationAwareAspectJAutoProxyCreator的postProcessBeforeInstantiation方法的主要核心在于将容器中所有的切面对应的通知都扫描出来并转化成InstantiationModelAwarePointcutAdvisorImpl并缓存起来了。一种预热机制，先把数据准备好，后续需要时直接再从缓存中拿。
 
-##### 1.4 BeanPostProcessor#postProcessAfterInitialization做了什么事
+##### 1.4 AnnotationAwareAspectJAutoProxyCreator的postProcessAfterInitialization做了什么事
+
+* 其源码及注释如下所示：
+
+  ```java
+  public Object postProcessAfterInitialization(@Nullable Object bean, String beanName) throws BeansException {
+      if (bean != null) {
+          Object cacheKey = getCacheKey(bean.getClass(), beanName);
+          if (!this.earlyProxyReferences.contains(cacheKey)) {
+              return wrapIfNecessary(bean, beanName, cacheKey); // @1
+          }
+      }
+      return bean;
+  }
+  ```
+
+* 这段源码的主要核心部分为：`@1`处的位置，这段代码就是创建代理对象的入口。其方法名也比较特殊**包装如果有必要的话**，如果你比较有经验的话，并且知道静态代理的话。这块儿的做法也一样，其实就是生成了一个代理对象，然后将目标对象包裹在里面。那**wrapIfNecessary**这个方法到底做了什么事呢？其源码如下所示：
+
+  ```java
+  protected Object wrapIfNecessary(Object bean, String beanName, Object cacheKey) {
+      if (StringUtils.hasLength(beanName) && this.targetSourcedBeans.contains(beanName)) {
+          return bean;
+      }
+      if (Boolean.FALSE.equals(this.advisedBeans.get(cacheKey))) {
+          return bean;
+      }
+      if (isInfrastructureClass(bean.getClass()) || shouldSkip(bean.getClass(), beanName)) { // @1
+          this.advisedBeans.put(cacheKey, Boolean.FALSE);
+          return bean;
+      }
+  
+      // Create proxy if we have advice.
+      Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, null); // @2
+      if (specificInterceptors != DO_NOT_PROXY) {
+          this.advisedBeans.put(cacheKey, Boolean.TRUE);
+          Object proxy = createProxy(
+              bean.getClass(), beanName, specificInterceptors, new SingletonTargetSource(bean)); // @3
+          this.proxyTypes.put(cacheKey, proxy.getClass()); // @4
+          return proxy;
+      }
+  
+      this.advisedBeans.put(cacheKey, Boolean.FALSE);
+      return bean;
+  }
+  ```
+
+* 我们先看下`@1`指向的代码，有没有觉得很相似。没错，它在1.3章节说到的**AnnotationAwareAspectJAutoProxyCreator的postProcessBeforeInstantiation**处也出现了，这是为什么呢？还记得我们在1.3章节中总结的那几个扩展点的执行顺序吧？不管一个bean需不需要被代理，都会执行AnnotationAwareAspectJAutoProxyCreator后置处理器，而`@1`指向的代码的含义仅仅是判断当前bean是否需要被代理而已，如果一个bean不需要被代理，那应该AnnotationAwareAspectJAutoProxyCreator后置处理器不应该对bean做任何操作。
+
+* `@2`指向的代码逻辑为：看这个bean是否有定义切面，如果有，则把定义的通知都找出来
+
+* `@3`指向的代码逻辑为：真实创建代理对象的逻辑，最终会调用到如下代码创建代理对象
+
+  ```java
+  // org.springframework.aop.framework.DefaultAopProxyFactory#createAopProxy
+  
+  @Override
+  public AopProxy createAopProxy(AdvisedSupport config) throws AopConfigException {
+      // config.isProxyTargetClass() 获取的就是注解中@EnableAspectJAutoProxy配置的proxyTargetClass属性
+      // 如果这里设置为true，则走内部逻辑，否则走@2处指向的代码处：使用jdk动态代理生成
+      if (config.isOptimize() || config.isProxyTargetClass() || hasNoUserSuppliedProxyInterfaces(config)) {
+          Class<?> targetClass = config.getTargetClass();
+          if (targetClass == null) {
+              throw new AopConfigException("TargetSource cannot determine target class: " +
+                                           "Either an interface or a target is required for proxy creation.");
+          }
+          // 就算@EnableAspectJAutoProxy配置的proxyTargetClass属性设置为true，只要目标对象实现了接口的话，同样也会使用jdk动态代理生成
+          if (targetClass.isInterface() || Proxy.isProxyClass(targetClass)) {
+              return new JdkDynamicAopProxy(config);
+          }
+          return new ObjenesisCglibAopProxy(config);
+      }
+      else {
+          return new JdkDynamicAopProxy(config);  // @2
+      }
+  }
+  ```
+
+  这里可以衍生出来几个面试题：
+
+  > Q1：使用@EnableAspectJAutoProxy注解开启aop功能后，默认是使用jdk动态代理还是cglib生成代理对象？
+  >
+  > A1：默认是jdk动态代理生成
+  >
+  > ---
+  >
+  > Q2：使用@EnableAspectJAutoProxy注解开启aop功能后，如何让spring使用cglib生成代理对象，如何让spring使用jdk动态代理生成代理对象？
+  >
+  > A2：答案可参考下表
+
+  | 目标对象特性   | proxyTargetClass属性                                         |
+  | -------------- | ------------------------------------------------------------ |
+  | 未实现接口     | 不管proxyTargetClass设置为true还是false，最终都是使用cglib生成代理对象 |
+  | 只要实现了接口 | 不管proxyTargetClass设置为true还是false，最终都是使用jdk动态代理生成代理对象 |
+
+* 因为我们的ObjectServiceImpl类实现了接口，因此，最终生成的代理对象类型为：**org.springframework.aop.framework.JdkDynamicAopProxy**
+
+##### 1.5 代理对象的执行过程
+
+* 在1.4章节中有说到，最终ObjectServiceImpl生成的代理对象类型为：**org.springframework.aop.framework.JdkDynamicAopProxy**。如果大家熟悉jdk动态代理的话，我们可以直接到JdkDynamicAopProxy类中找invoke方法。invoke方法就是我们代理对象的执行入口了
+
+* invoke方法的逻辑比较长，其中有对一些基础方法的判断，对于Object类的equals、hashCode方法则不进行代理，直接执行目标方法。因此，剩下的就是需要被代理的逻辑了，下面的代码演示展示的就是代理方法的逻辑：
+
+  ```java
+  @Override
+  @Nullable
+  public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+      MethodInvocation invocation;
+      Object oldProxy = null;
+      boolean setProxyContext = false;
+  
+      // 获取目标对象的包装器
+      TargetSource targetSource = this.advised.targetSource;
+      Object target = null;
+      try {
+          Object retVal;
+  
+          // 还记得@EnableAspectJAutoProxy注解的exposeProxy属性吗，我们设置为true的话，就会将代理对象暴露到线程变量中
+          if (this.advised.exposeProxy) {
+  		   // 将代理对象放到ThreadLocal中，我们可以使用AopContext.currentProxy()获取到当前的代理对象
+              oldProxy = AopContext.setCurrentProxy(proxy);
+              setProxyContext = true;
+          }
+  
+          // 获取真实的目标对象
+          target = targetSource.getTarget();
+          Class<?> targetClass = (target != null ? target.getClass() : null);
+  
+          // 这一步：就是调用增强方法和目标方法的逻辑了
+          List<Object> chain = this.advised.getInterceptorsAndDynamicInterceptionAdvice(method, targetClass); // @1
+  
+          if (chain.isEmpty()) {
+              // 省略无关代码
+          }
+          else {
+              // We need to create a method invocation...
+              invocation = new ReflectiveMethodInvocation(proxy, target, method, args, targetClass, chain); // @2
+              // Proceed to the joinpoint through the interceptor chain.
+              retVal = invocation.proceed(); // @3
+          }
+  
+          return retVal;
+      } finally {
+          if (target != null && !targetSource.isStatic()) {
+              // Must have come from TargetSource.
+              targetSource.releaseTarget(target);
+          }
+          if (setProxyContext) {
+              // Restore old proxy.
+              AopContext.setCurrentProxy(oldProxy);
+          }
+      }
+  }
+  ```
+
+* 上述`@1`处指定的代码处主要是获取一个方法调用链路，如果熟悉责任链设计模式的话，这一步相当于是构建所有的链路
+
+* 上述`@2`处指定的代码处主要是构建一个方法调用入口，如果熟悉责任链设计模式的话，这一步相当于是将所有的链路铺好（哪个链要放在第一个位置被调用，哪个链要放在第二个位置被调用、哪个链要放在最后一个位置被调用），等待一个执行
+
+* 上述`@3`处指定的代码为链路的执行者，表示要开始执行链路上的所以方法了。
+
+* 这个链路的初始化过程和执行过程见下图：
+
+  由上述图分析可知，想必大家明白在上篇文章[spring aop使用篇：熟悉使用前置通知、后置通知、返回通知、异常通知，并了解其特性](1)中对有介绍到各种通知的特性有所了解了吧？因为前置通知位于链路的顶端，所以先被执行，而后置通知位于finally代码块中，是一定会被执行的，返回通知是在目标方法执行结束后触发，若其中发生了异常则会跳过返回通知，进入catch中，进而触发异常通知。
+
+#### 二、总结
+
+* Spring AOP的原理，从源码的层面出发，从@EnableAspectJAutoProxy注解开始，到生成代理对象以及代理对象的执行顺序都大致总结了一遍，希望对大家有帮助。
+
+* **如果你觉得我的文章有用的话，欢迎点赞、收藏和关注。:laughing:**
+* **I'm a slow walker, but I never walk backwards**
