@@ -22,6 +22,7 @@
         <module>mybatis</module>
         <module>spring-mvc</module>
         <module>dynamic-mul-datasource</module>
+        <module>transaction-test</module>
     </modules>
 
     <artifactId>spring</artifactId>
