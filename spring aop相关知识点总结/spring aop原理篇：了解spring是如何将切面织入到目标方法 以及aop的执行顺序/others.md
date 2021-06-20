@@ -83,4 +83,4 @@ spring aop注意细节：
   
   ```
 
-  的@1处指向的代码的this对象，而这个this就是JdkDynamicAopProxy，最终这个h就是JdkDynamicAopProxy对象，进而调用到它的invoke方法
+  @1处指向的代码的this对象，而这个this就是JdkDynamicAopProxy，最终这个h就是JdkDynamicAopProxy对象，进而调用到它的invoke方法，因此aop的执行链路则从JdkDynamicAopProxy的invoke方法开始

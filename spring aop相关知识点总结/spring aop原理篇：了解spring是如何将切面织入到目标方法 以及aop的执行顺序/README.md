@@ -1,4 +1,4 @@
-### spring aop原理篇：了解spring是如何将切面织入到目标方法 以及aop的执行顺序
+### spring aop原理篇：了解spring是如何将通知织入到目标方法 以及aop的执行顺序
 
 #### 前言
 
@@ -106,6 +106,6 @@
   根据图中的分析可知，当shouldSkip方法执行完毕后，整个spring容器中所有的切面中定义的**通知**都会被缓存到内存中，大家可能会有疑惑，我怎么知道**哪个**通知适用于哪个切点呢？还记得在将通知转换成AspectJExpressionPointcut时有保存每个通知中的表达式吧？eg：`@After(value = "pointcutAnnotation()")  将获取到里面的 pointcutAnnotation() 字符串`。有了这个的话，我在找对应关系时，我看下哪个切点的方法名是这个，不就对应上了吗？
 
 * @2处的代码是自定义代理对象逻辑，我们很少用到，直接跳过。
-* 结论：AnnotationAwareAspectJAutoProxyCreator的postProcessBeforeInstantiation方法的主要核心在于将容器中所有的切面对应的切点都扫描出来并转化成InstantiationModelAwarePointcutAdvisorImpl并缓存起来了。一种预热机制，先把数据准备好，后续需要时直接再从缓存中拿。
+* 结论：AnnotationAwareAspectJAutoProxyCreator的postProcessBeforeInstantiation方法的主要核心在于将容器中所有的切面对应的通知都扫描出来并转化成InstantiationModelAwarePointcutAdvisorImpl并缓存起来了。一种预热机制，先把数据准备好，后续需要时直接再从缓存中拿。
 
 ##### 1.4 BeanPostProcessor#postProcessAfterInitialization做了什么事

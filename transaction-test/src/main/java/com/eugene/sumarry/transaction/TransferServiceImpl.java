@@ -15,20 +15,19 @@ public class TransferServiceImpl implements TransferService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRED)
+    @Transactional(rollbackFor = Exception.class)  // @1
     @Override
     public void transfer(String outAccountId, String inAccountId, BigDecimal amount) {
         // 进钱
-        ((TransferService)AopContext.currentProxy()).incrementAmount(inAccountId, amount);
+        this.incrementAmount(inAccountId, amount);
+
+        // ...... 可以增加扩展代码  @1
 
         // 出钱
         jdbcTemplate.update("UPDATE account SET amount = amount - ? WHERE id = ?", amount, outAccountId);
-        int x = 1 / 0;
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     public void incrementAmount(String accountId, BigDecimal amount) {
         // 不考虑任何并发情况，直接新增金额
         jdbcTemplate.update("UPDATE account SET amount = amount + ? WHERE id = ?", amount, accountId);

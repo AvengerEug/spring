@@ -15,9 +15,8 @@ public class Entry {
     public static void main(String[] args) {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
         TransferService transferService = context.getBean(TransferService.class);
-        transferService.transfer("avengerEug", "zhangsan", new BigDecimal("18"));
+        transferService.transfer("avengerEug", "zhangsan", new BigDecimal("1"));
     }
-
 
     @ComponentScan("com.eugene.sumarry.transaction")
     @Configuration
@@ -36,19 +35,17 @@ public class Entry {
         }
 
         @Bean
-        public PlatformTransactionManager platformTransactionManager() {
+        public PlatformTransactionManager platformTransactionManager(DataSource dataSource) {
             DataSourceTransactionManager manager = new DataSourceTransactionManager();
-
-            manager.setDataSource(dataSource());
+            manager.setDataSource(dataSource);
             return manager;
         }
 
         @Bean
-        public JdbcTemplate jdbcTemplate() {
-            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource());
+        public JdbcTemplate jdbcTemplate(DataSource dataSource) {
+            JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
             return jdbcTemplate;
         }
 
     }
-
 }
