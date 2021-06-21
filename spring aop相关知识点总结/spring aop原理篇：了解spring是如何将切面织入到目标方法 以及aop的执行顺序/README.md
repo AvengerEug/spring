@@ -12,7 +12,7 @@
 
 #### 一、源码中是如何将我们定义的各种通知与目标方法绑定起来的
 
-* 如果让各位自己来实现aop你会采用什么方式？不管是使用哪种方式来实现，最终一定会使用**代理设计模式**。毫无疑问，我们使用代理对象来增强目标对象，然后在执行目标对象的方法之前或者之后，我们可以执行很多自定义的操作：比如前置操作、后置操作等等。那spring是如何实现aop的呢？大家都知道，在使用spring 的aop之前，我们需要定义**切面、切点、通知**，有了这三个东西后，spring才能知道要对哪个目的地（切点）做逻辑增强（通知）。接下来，咱们来分析下spring的做法。
+* 如果让各位自己来实现aop你会采用什么方式？（3分钟后过后....）不管是使用哪种方式来实现，最终一定会使用**代理设计模式**。毫无疑问，我们使用代理对象来增强目标对象，然后在执行目标对象的方法之前或者之后，我们可以执行很多自定义的操作：比如前置操作、后置操作等等。那spring是如何实现aop的呢？大家都知道，在使用spring 的aop之前，我们需要定义**切面、切点、通知**，有了这三个东西后，spring才能知道要对哪个目的地（切点）做逻辑增强（通知）。接下来，咱们来分析下spring的做法。
 
 ##### 1.1 @EnableAspectJAutoProxy注解的含义
 
@@ -80,7 +80,7 @@
       // Create proxy here if we have a custom TargetSource.
       // Suppresses unnecessary default instantiation of the target bean:
       // The TargetSource will handle target instances in a custom fashion.
-      TargetSource targetSource = getCustomTargetSource(beanClass, beanName); // @2
+      TargetSource targetSource = getCustomTargetSource(beanClass, beanName);
       if (targetSource != null) {
           if (StringUtils.hasLength(beanName)) {
               this.targetSourcedBeans.add(beanName);
@@ -95,7 +95,7 @@
   }
   ```
 
-* @1处的代码比较核心，其主要逻辑是：判断当前bean是否为基础类（Advice.class、Pointcut.class、Advisor.class、AopInfrastructureBean.class），如果不是基础类的话，会执行**shouldSkip**方法的逻辑，在这个方法中，会去找当前bean的所有**通知**。那这个找通知的过程是如何执行的呢？这里的源码执行逻辑比较复杂，我们可以先看结果：
+* @1处的代码比较核心，其主要逻辑是：判断当前bean是否为基础类（Advice.class、Pointcut.class、Advisor.class、AopInfrastructureBean.class），如果不是基础类的话，会执行**shouldSkip**方法的逻辑。而在**shouldSkip**这个方法中，会去找项目中所有的切面以及切面内部定义的**通知**（包括实现了Advisor接口的切面和通知、自定义的切面和通知）。那这个找通知的过程是如何执行的呢？这里的源码执行逻辑比较复杂，我们可以先看结果：
 
   ![找出当前bean对应的所有通知.png](找出当前bean对应的所有通知.png)
 
@@ -105,8 +105,62 @@
 
   根据图中的分析可知，当shouldSkip方法执行完毕后，整个spring容器中所有的切面中定义的**通知**都会被缓存到内存中，大家可能会有疑惑，我怎么知道**哪个**通知适用于哪个切点呢？还记得在将通知转换成AspectJExpressionPointcut时有保存每个通知中的表达式吧？eg：`@After(value = "pointcutAnnotation()")  将获取到里面的 pointcutAnnotation() 字符串`。有了这个的话，我在找对应关系时，我看下哪个切点的方法名是这个，不就对应上了吗？
 
-* @2处的代码是自定义代理对象逻辑，我们很少用到，直接跳过。
-* 结论：AnnotationAwareAspectJAutoProxyCreator的postProcessBeforeInstantiation方法的主要核心在于将容器中所有的切面对应的通知都扫描出来并转化成InstantiationModelAwarePointcutAdvisorImpl并缓存起来了。一种预热机制，先把数据准备好，后续需要时直接再从缓存中拿。
+  同时，在图中有提到**InstantiationModelAwarePointcutAdvisorImpl**对象。它的本质是一个Advisor。在找通知的过程中，会将每个通知包装成**InstantiationModelAwarePointcutAdvisorImpl**类型的对象，其中这个对象中有一个特别重要的属性，就是：**instantiatedAdvice**，这个属性是Advice的类型的。其中，针对我们的通知类型，会将它转化成对应的Advice。其转换类型如下表中所示：
+
+  | 切面中定义的通知类型 | 切面中定义的通知类型的注解 | Advice类型                  |
+  | -------------------- | -------------------------- | --------------------------- |
+  | AtBefore             | @Before                    | AspectJMethodBeforeAdvice   |
+  | AtAfter              | @After                     | AspectJAfterAdvice          |
+  | AtAfterReturning     | @AfterReturning            | AspectJAfterReturningAdvice |
+  | AtAfterThrowing      | @AfterThrowing             | AspectJAfterThrowingAdvice  |
+  | AtAround             | @Around                    | AspectJAroundAdvice         |
+
+  其对应的源码如下所示：
+
+  ```java
+  AbstractAspectJAdvice springAdvice;
+  
+  switch (aspectJAnnotation.getAnnotationType()) {
+      case AtBefore:
+          springAdvice = new AspectJMethodBeforeAdvice(
+              candidateAdviceMethod, expressionPointcut, aspectInstanceFactory);
+          break;
+      case AtAfter:
+          springAdvice = new AspectJAfterAdvice(
+              candidateAdviceMethod, expressionPointcut, aspectInstanceFactory);
+          break;
+      case AtAfterReturning:
+          springAdvice = new AspectJAfterReturningAdvice(
+              candidateAdviceMethod, expressionPointcut, aspectInstanceFactory);
+          AfterReturning afterReturningAnnotation = (AfterReturning) aspectJAnnotation.getAnnotation();
+          if (StringUtils.hasText(afterReturningAnnotation.returning())) {
+              springAdvice.setReturningName(afterReturningAnnotation.returning());
+          }
+          break;
+      case AtAfterThrowing:
+          springAdvice = new AspectJAfterThrowingAdvice(
+              candidateAdviceMethod, expressionPointcut, aspectInstanceFactory);
+          AfterThrowing afterThrowingAnnotation = (AfterThrowing) aspectJAnnotation.getAnnotation();
+          if (StringUtils.hasText(afterThrowingAnnotation.throwing())) {
+              springAdvice.setThrowingName(afterThrowingAnnotation.throwing());
+          }
+          break;
+      case AtAround:
+          springAdvice = new AspectJAroundAdvice(
+              candidateAdviceMethod, expressionPointcut, aspectInstanceFactory);
+          break;
+      case AtPointcut:
+          if (logger.isDebugEnabled()) {
+              logger.debug("Processing pointcut '" + candidateAdviceMethod.getName() + "'");
+          }
+          return null;
+      default:
+          throw new UnsupportedOperationException(
+              "Unsupported advice type on method: " + candidateAdviceMethod);
+  }
+  ```
+
+* 结论：AnnotationAwareAspectJAutoProxyCreator的postProcessBeforeInstantiation方法的主要核心在于将容器中**所有的切面对应的通知都扫描出来并包装成InstantiationModelAwarePointcutAdvisorImpl类型并添加到缓存中**（**这里要注意：不管是自定义的切面、还是实现了Advisor接口的切面都会被扫描出来**）。一种预热机制，先把数据准备好，后续需要时直接再从缓存中拿。
 
 ##### 1.4 AnnotationAwareAspectJAutoProxyCreator的postProcessAfterInitialization做了什么事
 
@@ -124,7 +178,7 @@
   }
   ```
 
-* 这段源码的主要核心部分为：`@1`处的位置，这段代码就是创建代理对象的入口。其方法名也比较特殊**包装如果有必要的话**，如果你比较有经验的话，并且知道静态代理的话。这块儿的做法也一样，其实就是生成了一个代理对象，然后将目标对象包裹在里面。那**wrapIfNecessary**这个方法到底做了什么事呢？其源码如下所示：
+* 这段源码的主要核心部分为：`@1`处的位置，这段代码就是创建代理对象的入口。其方法名也比较见名知意：**包装如果有必要的话**，如果你比较有经验并且知道静态代理的话。这块儿的做法也一样，其实就是生成了一个代理对象，然后将目标对象包裹在里面。那**wrapIfNecessary**这个方法到底做了什么事呢？其源码如下所示：
 
   ```java
   protected Object wrapIfNecessary(Object bean, String beanName, Object cacheKey) {
@@ -156,12 +210,12 @@
 
 * 我们先看下`@1`指向的代码，有没有觉得很相似。没错，它在1.3章节说到的**AnnotationAwareAspectJAutoProxyCreator的postProcessBeforeInstantiation**处也出现了，这是为什么呢？还记得我们在1.3章节中总结的那几个扩展点的执行顺序吧？不管一个bean需不需要被代理，都会执行AnnotationAwareAspectJAutoProxyCreator后置处理器，而`@1`指向的代码的含义仅仅是判断当前bean是否需要被代理而已，如果一个bean不需要被代理，那应该AnnotationAwareAspectJAutoProxyCreator后置处理器不应该对bean做任何操作。
 
-* `@2`指向的代码逻辑为：看这个bean是否有定义切面，如果有，则把定义的通知都找出来
+* `@2`指向的代码逻辑为：看这个bean是否有定义切面，如果有，则把对应的通知都找出来，最终转化成一个个的拦截器，后续生成代理对象时，内部要维护这些拦截器，以实现调用我们定义好的通知的目的。
 
 * `@3`指向的代码逻辑为：真实创建代理对象的逻辑，最终会调用到如下代码创建代理对象
 
   ```java
-  // org.springframework.aop.framework.DefaultAopProxyFactory#createAopProxy
+  // 方法坐标：org.springframework.aop.framework.DefaultAopProxyFactory#createAopProxy
   
   @Override
   public AopProxy createAopProxy(AdvisedSupport config) throws AopConfigException {
@@ -173,7 +227,7 @@
               throw new AopConfigException("TargetSource cannot determine target class: " +
                                            "Either an interface or a target is required for proxy creation.");
           }
-          // 就算@EnableAspectJAutoProxy配置的proxyTargetClass属性设置为true，只要目标对象实现了接口的话，同样也会使用jdk动态代理生成
+          // 如果目标类是一个接口的话，只能使用都jdk动态代理
           if (targetClass.isInterface() || Proxy.isProxyClass(targetClass)) {
               return new JdkDynamicAopProxy(config);
           }
@@ -195,22 +249,20 @@
   >
   > Q2：使用@EnableAspectJAutoProxy注解开启aop功能后，如何让spring使用cglib生成代理对象，如何让spring使用jdk动态代理生成代理对象？
   >
-  > A2：答案可参考下表
+  > A2：设置proxyTargetClass设置为true
 
-  | 目标对象特性   | proxyTargetClass属性                                         |
-  | -------------- | ------------------------------------------------------------ |
-  | 未实现接口     | 不管proxyTargetClass设置为true还是false，最终都是使用cglib生成代理对象 |
-  | 只要实现了接口 | 不管proxyTargetClass设置为true还是false，最终都是使用jdk动态代理生成代理对象 |
-
-* 因为我们的ObjectServiceImpl类实现了接口，因此，最终生成的代理对象类型为：**org.springframework.aop.framework.JdkDynamicAopProxy**
+  因为我们的@EnableAspectJAutoProxy注解并未指定使用cglib代理，因此，最终生成的代理对象类型为：**org.springframework.aop.framework.JdkDynamicAopProxy**（根据方法的返回值签名知道的）。
+  
 
 ##### 1.5 代理对象的执行过程
 
-* 在1.4章节中有说到，最终ObjectServiceImpl生成的代理对象类型为：**org.springframework.aop.framework.JdkDynamicAopProxy**。如果大家熟悉jdk动态代理的话，我们可以直接到JdkDynamicAopProxy类中找invoke方法。invoke方法就是我们代理对象的执行入口了
+* 在1.4章节中有说到，最终ObjectServiceImpl生成的代理对象类型为：**org.springframework.aop.framework.JdkDynamicAopProxy**。如果大家熟悉jdk动态代理的话，我们可以直接到**JdkDynamicAopProxy**类中找invoke方法。invoke方法就是我们代理对象的执行入口了
 
 * invoke方法的逻辑比较长，其中有对一些基础方法的判断，对于Object类的equals、hashCode方法则不进行代理，直接执行目标方法。因此，剩下的就是需要被代理的逻辑了，下面的代码演示展示的就是代理方法的逻辑：
 
   ```java
+  // 方法坐标：org.springframework.aop.framework.JdkDynamicAopProxy#invoke
+  
   @Override
   @Nullable
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -235,16 +287,16 @@
           target = targetSource.getTarget();
           Class<?> targetClass = (target != null ? target.getClass() : null);
   
-          // 这一步：就是调用增强方法和目标方法的逻辑了
+          // 这一步：获取当前执行的目标方法，已经为目标方法定义的一些通知，最终以拦截器的方式存储在list中
           List<Object> chain = this.advised.getInterceptorsAndDynamicInterceptionAdvice(method, targetClass); // @1
   
           if (chain.isEmpty()) {
               // 省略无关代码
           }
           else {
-              // We need to create a method invocation...
+              // 构建链路的调用器
               invocation = new ReflectiveMethodInvocation(proxy, target, method, args, targetClass, chain); // @2
-              // Proceed to the joinpoint through the interceptor chain.
+              // 开始执行链路上的方法
               retVal = invocation.proceed(); // @3
           }
   
@@ -264,7 +316,7 @@
 
 * 上述`@1`处指定的代码处主要是获取一个方法调用链路，如果熟悉责任链设计模式的话，这一步相当于是构建所有的链路
 
-* 上述`@2`处指定的代码处主要是构建一个方法调用入口，如果熟悉责任链设计模式的话，这一步相当于是将所有的链路铺好（哪个链要放在第一个位置被调用，哪个链要放在第二个位置被调用、哪个链要放在最后一个位置被调用），等待一个执行
+* 上述`@2`处指定的代码处主要是构建一个方法调用入口，如果熟悉责任链设计模式的话，这一步相当于是将所有的链路铺好（哪个链要放在第一个位置被调用，哪个链要放在第二个位置被调用、哪个链要放在最后一个位置被调用），等待被触发
 
 * 上述`@3`处指定的代码为链路的执行者，表示要开始执行链路上的所以方法了。
 
