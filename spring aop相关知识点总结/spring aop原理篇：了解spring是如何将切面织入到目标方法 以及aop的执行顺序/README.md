@@ -2,14 +2,14 @@
 
 #### 前言
 
-* 在上篇文章[spring aop使用篇：熟悉使用前置通知、后置通知、返回通知、异常通知，并了解其特性](1)中我们知道了如何使用aop以及其的一些特性，同时还提出来的如下所述的疑问点：
+* 在上篇文章[spring aop使用篇：熟悉使用前置通知、后置通知、返回通知、异常通知，并了解其特性](https://blog.csdn.net/avengerEug/article/details/118076101)中我们知道了如何使用aop以及其的一些特性，同时还提出来如下所述的疑问点：
 
   > 1、源码中是如何将我们定义的各种通知与目标方法绑定起来的  --> 若想急切知道答案，可直接看1.3章节
   >
   > 2、aop代理对象生成的策略   --> 若想急切知道答案，可直接看1.4章节
->
+  >
   > 3、我们的aop代理对象的执行顺序是怎样的 --> 若想急切知道答案，可直接看1.5 章节
-  
+
   接下来，我们继续以上篇文章的测试案例为例，从源码的角度来分析这三个点。废话不多说，直接开干！
 
 #### 一、源码中是如何将我们定义的各种通知与目标方法绑定起来的
@@ -41,7 +41,7 @@
   | InstantiationAwareBeanPostProcessor      | BeanPostProcessor的子类，对BeanPostProcessor做了扩展，可以在实例化bean之前（**postProcessBeforeInstantiation**）和之后（**postProcessAfterInstantiation**）做自定义的事情。这里的实例化仅仅是创建bean对象，**还没有完成依赖注入操作**。同时，如果在postProcessAfterInstantiation方法返回false的话，spring容器将不会对这个bean做依赖注入操作。（**可以实现postProcessBeforeInstantiation和postProcessAfterInstantiation方法**） | **若aopProxyCreator这个bean被创建，会对后续spring创建的所有的bean生效** |
   | SmartInstantiationAwareBeanPostProcessor | InstantiationAwareBeanPostProcessor的子类，对InstantiationAwareBeanPostProcessor做了扩展。这个后置处理器的最重要的方法为：**determineCandidateConstructors**，最终会调用到此方法来确定当前bean要使用哪个构造方法来实例化bean（**可以实现determineCandidateConstructors方法**） | **若aopProxyCreator这个bean被创建，会对后续spring创建的所有的bean生效** |
 
-  上述后置处理器，那他们的执行顺序是怎样的呢？别灰心，我都为你准备好了：因为了解他们的执行顺序，对理解aop原理是有帮助的。其执行顺序是这样的：
+  上述后置处理器，那他们的执行顺序是怎样的呢？是不是不知所措？别灰心，我都为你准备好了，其执行顺序是这样的（为什么要了解这些后置处理器的执行顺序？因为知道执行顺序后，就能知道每个扩展点在aop功能中起到了什么样的作用）：
 
   ```txt
   第一个阶段：
@@ -61,7 +61,7 @@
 
 ##### 1.3 AnnotationAwareAspectJAutoProxyCreator的postProcessBeforeInstantiation做了什么事
 
-* 其源码及注释如下所示：
+* 其源码如下所示：
 
   ```java
   @Override
@@ -97,11 +97,11 @@
   }
   ```
 
-* @1处的代码比较核心，其主要逻辑是：判断当前bean是否为基础类（Advice.class、Pointcut.class、Advisor.class、AopInfrastructureBean.class），如果不是基础类的话，会执行**shouldSkip**方法的逻辑。而在**shouldSkip**这个方法中，会去找项目中所有的切面以及切面内部定义的**通知**（包括实现了Advisor接口的切面和通知、自定义的切面和通知）。那这个找通知的过程是如何执行的呢？这里的源码执行逻辑比较复杂，我们可以先看结果：
+* `@1`处的代码比较核心，其主要逻辑是：判断当前bean是否为基础类（Advice.class、Pointcut.class、Advisor.class、AopInfrastructureBean.class），如果不是基础类的话，会执行**shouldSkip**方法的逻辑。而在**shouldSkip**这个方法中，会去找项目中所有的切面以及切面内部定义的**通知**（包括实现了Advisor接口的切面和通知、自定义的切面和通知）。那这个找通知的过程是如何执行的呢？这里的源码执行逻辑比较复杂，我们可以先看执行结果：
 
   ![找出当前bean对应的所有通知.png](找出当前bean对应的所有通知.png)
 
-  在此方法执行完毕后，我们已经把AspectDefinition.java这个类中定义的各种通知已经找出来了，并且转化成Advisor的类型，存在了一个list中，那这一步spring到底是怎么做的呢？我们画图来详细分析下shouldSkip方法的执行流程：
+  在此方法执行完毕后，我们已经把AspectDefinition.java这个类中定义的各种通知已经找出来并转化成Advisor的类型存在了一个list中，那这一步spring到底是怎么做的呢？我们画图来详细分析下shouldSkip方法的执行流程：
 
   ![AnnotationAwareAspectJAutoProxyCreator是如何找到切面对应的通知的.png](AnnotationAwareAspectJAutoProxyCreator是如何找到切面对应的通知的.png)
 
@@ -123,14 +123,17 @@
   AbstractAspectJAdvice springAdvice;
   
   switch (aspectJAnnotation.getAnnotationType()) {
+      // 前置通知
       case AtBefore:
           springAdvice = new AspectJMethodBeforeAdvice(
               candidateAdviceMethod, expressionPointcut, aspectInstanceFactory);
           break;
+      // 后置通知
       case AtAfter:
           springAdvice = new AspectJAfterAdvice(
               candidateAdviceMethod, expressionPointcut, aspectInstanceFactory);
           break;
+      // 返回通知
       case AtAfterReturning:
           springAdvice = new AspectJAfterReturningAdvice(
               candidateAdviceMethod, expressionPointcut, aspectInstanceFactory);
@@ -139,6 +142,7 @@
               springAdvice.setReturningName(afterReturningAnnotation.returning());
           }
           break;
+      // 异常通知
       case AtAfterThrowing:
           springAdvice = new AspectJAfterThrowingAdvice(
               candidateAdviceMethod, expressionPointcut, aspectInstanceFactory);
@@ -147,10 +151,12 @@
               springAdvice.setThrowingName(afterThrowingAnnotation.throwing());
           }
           break;
+      // 环绕通知
       case AtAround:
           springAdvice = new AspectJAroundAdvice(
               candidateAdviceMethod, expressionPointcut, aspectInstanceFactory);
           break;
+      // 切点逻辑
       case AtPointcut:
           if (logger.isDebugEnabled()) {
               logger.debug("Processing pointcut '" + candidateAdviceMethod.getName() + "'");
@@ -162,7 +168,7 @@
   }
   ```
 
-* 结论：AnnotationAwareAspectJAutoProxyCreator的postProcessBeforeInstantiation方法的主要核心在于将容器中**所有的切面对应的通知都扫描出来并包装成InstantiationModelAwarePointcutAdvisorImpl类型并添加到缓存中**（**这里要注意：不管是自定义的切面、还是实现了Advisor接口的切面都会被扫描出来**）。一种预热机制，先把数据准备好，后续需要时直接再从缓存中拿。
+* 结论：AnnotationAwareAspectJAutoProxyCreator的postProcessBeforeInstantiation方法的主要核心在于将容器中**所有的切面对应的通知都扫描出来并包装成InstantiationModelAwarePointcutAdvisorImpl类型的对象并添加到缓存中**（**这里要注意：不管是自定义的切面、还是实现了Advisor接口的切面都会被扫描出来**）。一种预热机制，先把数据准备好，后续需要时直接再从缓存中拿。
 
 ##### 1.4 AnnotationAwareAspectJAutoProxyCreator的postProcessAfterInitialization做了什么事
 
@@ -201,7 +207,7 @@
           this.advisedBeans.put(cacheKey, Boolean.TRUE);
           Object proxy = createProxy(
               bean.getClass(), beanName, specificInterceptors, new SingletonTargetSource(bean)); // @3
-          this.proxyTypes.put(cacheKey, proxy.getClass()); // @4
+          this.proxyTypes.put(cacheKey, proxy.getClass());
           return proxy;
       }
   
@@ -251,16 +257,17 @@
   >
   > Q2：使用@EnableAspectJAutoProxy注解开启aop功能后，如何让spring使用cglib生成代理对象，如何让spring使用jdk动态代理生成代理对象？
   >
-  > A2：设置proxyTargetClass设置为true
+  > A2：满足两个条件：目标类不是一个接口 并且 设置proxyTargetClass为true
 
   因为我们的@EnableAspectJAutoProxy注解并未指定使用cglib代理，因此，最终生成的代理对象类型为：**org.springframework.aop.framework.JdkDynamicAopProxy**（根据方法的返回值签名知道的）。
   
+* 总结：AnnotationAwareAspectJAutoProxyCreator的postProcessAfterInitialization方法主要作用就是：创建代理对象。
 
 ##### 1.5 代理对象的执行过程
 
 * 在1.4章节中有说到，最终ObjectServiceImpl生成的代理对象类型为：**org.springframework.aop.framework.JdkDynamicAopProxy**。如果大家熟悉jdk动态代理的话，我们可以直接到**JdkDynamicAopProxy**类中找invoke方法。invoke方法就是我们代理对象的执行入口了
 
-* invoke方法的逻辑比较长，其中有对一些基础方法的判断，对于Object类的equals、hashCode方法则不进行代理，直接执行目标方法。因此，剩下的就是需要被代理的逻辑了，下面的代码演示展示的就是代理方法的逻辑：
+* invoke方法的逻辑比较长，其中有对一些基础方法的判断，比如：**对于Object类的equals、hashCode方法则不执行增强逻辑，直接执行目标方法**。因此，剩下的就是需要被代理的逻辑了，下面的代码展示的就是代理方法的逻辑：
 
   ```java
   // 方法坐标：org.springframework.aop.framework.JdkDynamicAopProxy#invoke
@@ -330,7 +337,7 @@
 
 #### 二、总结
 
-* Spring AOP的原理，从源码的层面出发，从@EnableAspectJAutoProxy注解开始，到生成代理对象以及代理对象的执行顺序都大致总结了一遍。
+* Spring AOP的原理，从源码的层面出发，从@EnableAspectJAutoProxy注解开始，到生成代理对象以及代理对象的执行顺序都总结了一遍。
 
 * **如果你觉得我的文章有用的话，欢迎点赞、收藏和关注。:laughing:**
 * **I'm a slow walker, but I never walk backwards**
