@@ -1,4 +1,4 @@
-### spring aop原理篇：了解spring是如何将通知织入到目标方法 以及aop的执行顺序
+### spring aop原理篇：我用上我的洪荒之力来帮你彻底了解aop注解@EnableAspectJAutoProxy的原理
 
 #### 前言
 
