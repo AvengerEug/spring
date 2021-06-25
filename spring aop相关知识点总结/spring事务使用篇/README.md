@@ -1,4 +1,4 @@
-### Spring事务使用篇：论高富帅的重要性
+### Spring事务使用篇：学习spring事务传播机制的7种姿势
 
 ## 前言
 
@@ -234,23 +234,125 @@
 
   ![Spring事务传播机制含义.png](Spring事务传播机制含义.png)
   
-* 那Spring有哪些事务传播机制呢？我们查看下**org.springframework.transaction.annotation.Propagation**枚举，在源码中一共定义了7中事务传播机制，我将以**老王和小美相亲的案例**来说明这7种事务传播机制特性。
+* 那Spring有哪些事务传播机制呢？我们查看下**org.springframework.transaction.annotation.Propagation**枚举，在源码中一共定义了7中事务传播机制，他们分别有什么样的特性呢？我将以**不同的姿势（测试案例）**来带大家认识他们。
 
-#### 2.1 REQUIRED
+* 继续改造**TransferServiceImpl.java**类，其模板代码如下所示：
 
-* 如图所示：上游方法若存在事务，则共用一个事务，否则开启一个新事务。保证方法一定是原子性的。
+  ```java
+  @Component
+  public class TransferServiceImpl implements TransferService {
+  
+      @Autowired
+      private JdbcTemplate jdbcTemplate;
+  
+      @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRED)
+      @Override
+      public void transfer(String outAccountId, String inAccountId, BigDecimal amount) {
+          // 进钱
+  	   ((TransferService) AopContext.currentProxy()).incrementAmount(inAccountId, amount);
+  
+          // ...... 可以增加扩展代码  @1
+  
+          // 出钱
+          jdbcTemplate.update("UPDATE account SET amount = amount - ? WHERE id = ?", amount, outAccountId);
+  
+          // ...... 可以增加扩展代码  @2
+      }
+  
+      // @3
+      @Override
+      public void incrementAmount(String accountId, BigDecimal amount) {
+          // 不考虑任何并发情况，直接新增金额
+          jdbcTemplate.update("UPDATE account SET amount = amount + ? WHERE id = ?", amount, accountId);
+          
+          // ...... 可以增加扩展代码  @4
+      }
+  }
+  ```
 
-#### 2.2 NOT_SUPPORTED
+  在上述模板中定义了5个扩展点，其中**@3**是定义方法的事务特性，**@1、@2、@4**是测试抛异常的位置。接下来将以传播机制为**REQUIRED_NEW**的情形进行测试（剩下的6个传播机制可以参考相应的测试用例）
 
-* 如图所示：给自己贴上一个标签，我不需要事务。
+#### 2.1 将incrementAmount方法设置REQUIRED_NEW的事务传播机制
 
-#### 2.3 REQUIRES_NEW
+* 改造**TransferServiceImpl.java**类，其代码如下所示：
 
-* 如图所示：狂妄自大，我一定有事务，这是一个定理，不会因任何外界因素而改变
+  ```java
+  @Component
+  public class TransferServiceImpl implements TransferService {
+  
+      @Autowired
+      private JdbcTemplate jdbcTemplate;
+  
+      @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRED)
+      @Override
+      public void transfer(String outAccountId, String inAccountId, BigDecimal amount) {
+          // 进钱
+         ((TransferService) AopContext.currentProxy()).incrementAmount(inAccountId, amount);
+  
+          // ...... 可以增加扩展代码  @1
+  
+          // 出钱
+          jdbcTemplate.update("UPDATE account SET amount = amount - ? WHERE id = ?", amount, outAccountId);
+  
+          // ...... 可以增加扩展代码  @2
+      }
+  
+      @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW) // @3
+      @Override
+      public void incrementAmount(String accountId, BigDecimal amount) {
+          // 不考虑任何并发情况，直接新增金额
+          jdbcTemplate.update("UPDATE account SET amount = amount + ? WHERE id = ?", amount, accountId);
+          
+          // ...... 可以增加扩展代码  @4
+      }
+  }
+  ```
 
-#### 2.4 MANDATORY
+  在`@3`处指定了事务的传播机制为**REQUIRES_NEW**
 
-* 老王已经暗恋心仪的校花小美很久了。这一次，他终于骨气勇气来到了校花的房门口，敲门说：小美，在吗？ 小妹打开门一看，对着老王说：不是高富帅（没有事务）休想打老娘的主意。
+##### 2.1.1 测试用例1：在@1处模拟抛出异常
+
+* 在`@1`添加如下代码：
+
+  ```java
+  int result = 1 / 0;
+  ```
+
+  并继续执行Entry.java的main方法。你会发现zhangsan账户的钱加了，**但是avengerEug账户的钱没扣**。这是为什么呢？在执行的过程中，虽然我们是从具有事务特性的transfer方法内部调用了具有事务特性的**incrementAmount**方法，但**incrementAmount**方法的事务传播机制是**REQUIRES_NEW**，Spring在执行的过程中会为**incrementAmount**方法单独开启一个事务。而当我们在`@1`处抛出异常时，**incrementAmount**方法的事务已经提交了。因此，在这种情况下是不会影响到**incrementAmount**方法的执行结果的。
+
+##### 2.1.2 测试用例2：在@2处模拟抛异常
+
+* 在`@2`处添加如下代码：
+
+  ```java
+  int result = 1 / 0;
+  ```
+
+  其运行结果与**测试用例1**的结果一致。
+
+##### 2.1.3 测试用例3：在@4处模拟抛异常
+
+* 在`@4`处添加如下代码
+
+  ```java
+  int result = 1 / 0;
+  ```
+
+  并继续执行Entry.java的main方法。你会发现zhangsan账户的钱没有加，avengerEug账户的钱也没有减。原因就是：**incrementAmount**方法内部抛出的异常，在incrementAmount方法中开启的事务也回滚了。但由于没有对这个异常进行捕获，最终此异常也会抛向transfer方法。因此也触发了transfer方法的回滚操作。
+
+#### 2.2 其他的6种事务传播机制特性
+
+* 上面总结到**REQUIRES_NEW**传播机制的特性，并从三个测试用例的视角来了解其相关的特性。由于文章篇幅，这里已经总结好spring的7种事务传播机制的特性了，大家可以套用上述的测试案例的模板来验证剩下的6种传播机制。
+
+  | 事务传播机制类型 |                             特点                             |                             举例                             |
+  | :--------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
+  |     REQUIRED     |    两个带有事务注解的方法共用，若事务不存在则创建一个新的    | 若下游方法的事务传播机制为REQUIRED时。若上游方法有事务，则共用一个事务。否则自己开启一个事务 |
+  |  NOT_SUPPORTED   |                          不支持事务                          | 下游方法的事务传播机制为NOT_SUPPORTED时。若上游方法开启了事务，就算下游方法内部抛了异常，上游方法也不会回滚事务。 |
+  |   REQUIRES_NEW   | 不管之前有没有事务，都会开启一个新的事务，待新的事务执行完毕后，再执行之前的事务 | 下游方法的事务传播机制为REQUIRES_NEW时。不管上游方法有没有事务，自己都会开启一个事务。 |
+  |    MANDATORY     |             必须在有事务的情况下执行，否则抛异常             | 下游方法的事务传播机制为REQUIRES_NEW时。若上游方法未开启事务，则抛异常 |
+  |      NEVER       |   必须在一个没有事务中执行，否则抛出异常(与MANDATORY相反)    | 下游方法的事务传播机制为NEVER时。若上游方法开启了事务，则抛异常 |
+  |     SUPPORTS     |    依赖于调用方是否开启事务，若调用方开启了事务则使用事务    | 与NOT_SUPPORTED相反。下游方法的事务传播机制为SUPPORTED时，取决于上游方法的特性，若上游方法无事务，则自己也无事务。若上游方法有事务，则自己也有事务。 |
+  |      NESTED      | 如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则会开启事务 | 下游方法的事务传播机制为NESTED时。若上游方法开启了事务，在执行下游方法时，下游方法会开启一个子事务，当下游方法 |
 
 
 

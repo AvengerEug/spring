@@ -30,7 +30,7 @@ public class Entry {
             driverManagerDataSource.setUrl("jdbc:mysql://127.0.0.1:3306/transaction_test?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowMultiQueries=true");
             driverManagerDataSource.setUsername("root");
             driverManagerDataSource.setDriverClassName("com.mysql.jdbc.Driver");
-            driverManagerDataSource.setPassword("");
+            driverManagerDataSource.setPassword("root");
             return driverManagerDataSource;
         }
 
