@@ -1,24 +1,24 @@
-### spring aop原理篇：我用上我的洪荒之力来帮你彻底了解aop注解@EnableAspectJAutoProxy的原理
+# spring aop原理篇：我用上我的洪荒之力来帮你彻底了解aop注解@EnableAspectJAutoProxy的原理
 
-#### 前言
+## 前言
 
 * 在上篇文章[spring aop使用篇：熟悉使用前置通知、后置通知、返回通知、异常通知，并了解其特性](https://blog.csdn.net/avengerEug/article/details/118076101)中我们知道了如何使用aop以及其的一些特性，同时还提出来如下所述的疑问点：
 
-  > 1、源码中是如何将我们定义的各种通知与目标方法绑定起来的  --> 若想急切知道答案，可直接看1.3章节
+  > 1、源码中是如何将我们定义的各种通知与目标方法绑定起来的
   >
-  > 2、aop代理对象生成的策略   --> 若想急切知道答案，可直接看1.4章节
+  > 2、aop代理对象生成的策略
   >
-  > 3、我们的aop代理对象的执行顺序是怎样的 --> 若想急切知道答案，可直接看1.5 章节
+  > 3、我们的aop代理对象的执行顺序是怎样的
 
   接下来，我们继续以上篇文章的测试案例为例，从源码的角度来分析这三个点。废话不多说，直接开干！
 
-#### 一、源码中是如何将我们定义的各种通知与目标方法绑定起来的
+## 一、源码中是如何将我们定义的各种通知与目标方法绑定起来的
 
-* 如果让各位自己来实现aop你会采用什么方式？（3分钟后过后....）不管是使用哪种方式来实现，最终一定会使用**代理设计模式**。毫无疑问，我们使用代理对象来增强目标对象，然后在执行目标对象的方法之前或者之后，我们可以执行很多自定义的操作：比如前置操作、后置操作等等。那spring是如何实现aop的呢？大家都知道，在使用spring 的aop之前，我们需要定义**切面、切点、通知**，有了这三个东西后，spring才能知道要对哪个目的地（切点）做逻辑增强（通知）。接下来，咱们来分析下spring的做法。
+* 如果让各位自己来实现aop你会采用什么方式？（**3分钟后过后....**）不管是使用哪种方式来实现，最终一定会使用**代理设计模式**。毫无疑问，我们使用代理对象来增强目标对象，然后在执行目标对象的方法之前或者之后，我们可以执行很多自定义的操作：比如前置操作、后置操作等等。那spring是如何实现aop的呢？大家都知道，在使用spring 的aop之前，我们需要定义**切面、切点、通知**，有了这三个东西后，spring才能知道要对哪个目的地（切点）做逻辑增强（通知）。接下来，咱们来分析下spring的做法。
 
-##### 1.1 @EnableAspectJAutoProxy注解的含义
+### 1.1 @EnableAspectJAutoProxy注解的含义
 
-* 在使用spring时，我们通常在配置类中添加这么一个注解的话，项目的aop功能就会启动了。那这个注解在spring中主要做了什么事情呢？这与spring的**@Import**扩展点相关（如果不熟悉的话，可以看我之前spring系列相关的文章），它主要是向spring容器导入了**AspectJAutoProxyRegistrar**的bean，那这个bean做了哪些事情呢？详看下图：
+* 在使用spring时，我们通常在配置类中添加@EnableAspectJAutoProxy注解的话，项目的aop功能就会开启了。那这个注解在spring中主要做了什么事情呢？这与spring的**@Import**扩展点相关（如果不熟悉的话，可以看我之前spring系列相关的文章），它主要是向spring容器导入了**AspectJAutoProxyRegistrar**的bean，那这个bean做了哪些事情呢？详看下图：
 
   ![AspectJAutoProxyRegistrar做了哪些事情.png](AspectJAutoProxyRegistrar做了哪些事情.png)
 
@@ -26,7 +26,7 @@
 
 * 分析到这，@EnableAspectJAutoProxy注解的功能就完事了。那我们接着要怎么分析呢？因为这个注解往spring容器中添加了**aopProxyCreator**的beanDefinition，最终spring容器肯定会去创建它，因为spring的很多扩展点的使用前提是，这个类得是一个spring bean。因此，我们现在去看看**aopProxyCreator**这个bean到底有什么特殊的地方。
 
-##### 1.2 aopProxyCreator 这个bean有什么特殊点
+### 1.2 aopProxyCreator 这个bean有什么特殊点
 
 * 在1.1章节中有说明aopProxyCreator这个bean的类型为：**AnnotationAwareAspectJAutoProxyCreator**，那我们看下这个类的**关系继承图**
 
@@ -59,7 +59,7 @@
   
   但实际上，只有InstantiationAwareBeanPostProcessor#postProcessBeforeInstantiation和BeanPostProcessor#postProcessAfterInitialization这两个方法的实现和aop有关系。因此，我们着重分析下这两个方法。
 
-##### 1.3 AnnotationAwareAspectJAutoProxyCreator的postProcessBeforeInstantiation做了什么事
+### 1.3 AnnotationAwareAspectJAutoProxyCreator的postProcessBeforeInstantiation做了什么事
 
 * 其源码如下所示：
 
@@ -170,7 +170,7 @@
 
 * 结论：AnnotationAwareAspectJAutoProxyCreator的postProcessBeforeInstantiation方法的主要核心在于将容器中**所有的切面对应的通知都扫描出来并包装成InstantiationModelAwarePointcutAdvisorImpl类型的对象并添加到缓存中**（**这里要注意：不管是自定义的切面、还是实现了Advisor接口的切面都会被扫描出来**）。一种预热机制，先把数据准备好，后续需要时直接再从缓存中拿。
 
-##### 1.4 AnnotationAwareAspectJAutoProxyCreator的postProcessAfterInitialization做了什么事
+### 1.4 AnnotationAwareAspectJAutoProxyCreator的postProcessAfterInitialization做了什么事
 
 * 其源码及注释如下所示：
 
@@ -263,7 +263,7 @@
   
 * 总结：AnnotationAwareAspectJAutoProxyCreator的postProcessAfterInitialization方法主要作用就是：创建代理对象。
 
-##### 1.5 代理对象的执行过程
+### 1.5 代理对象的执行过程
 
 * 在1.4章节中有说到，最终ObjectServiceImpl生成的代理对象类型为：**org.springframework.aop.framework.JdkDynamicAopProxy**。如果大家熟悉jdk动态代理的话，我们可以直接到**JdkDynamicAopProxy**类中找invoke方法。invoke方法就是我们代理对象的执行入口了
 
@@ -333,11 +333,11 @@
 
   ![aop代理对象执行顺序.png](aop代理对象执行顺序.png)
   
-  由上述图分析可知，想必大家明白在上篇文章[spring aop使用篇：熟悉使用前置通知、后置通知、返回通知、异常通知，并了解其特性](1)中对有介绍到各种通知的特性有所了解了吧？首先，方法调用栈是从异常通知开始的，在异常通知中有一个大的try catch块，它能捕获到链路中抛出的异常，进而执行异常通知。其次，后置通知处于第二个链路中，由于内部有try finally块，而在finally块中执行的是后置通知，所以后置通知是一定会被执行的。再其次，返回通知位于第三个链路中，在返回通知中，并没有try finally代码块，因此返回通知不一定会被执行。最后，前置通知位于第四个链路中，其与目标方法的执行是同步的。通过上述的分析可知，只有前置通知是在目标方法执行之前触发的，剩下的后置通知、返回通知、异常通知都要等目标方法执行完毕后再根据代码的逻辑执行不同的通知逻辑。
+  由上述图分析可知，想必大家明白在上篇文章[spring aop使用篇：熟悉使用前置通知、后置通知、返回通知、异常通知，并了解其特性](https://blog.csdn.net/avengerEug/article/details/118076101)介绍的各种通知的特性有所了解了吧？首先，方法调用栈是从异常通知开始的，在异常通知中有一个大的try catch块，它能捕获到链路中抛出的异常，进而执行异常通知。其次，后置通知处于第二个链路中，由于内部有try finally块，而在finally块中执行的是后置通知，所以后置通知是一定会被执行的。再其次，返回通知位于第三个链路中，在返回通知中，并没有try finally代码块，因此返回通知不一定会被执行。最后，前置通知位于第四个链路中，其与目标方法的执行是同步的。通过上述的分析可知，只有前置通知是在目标方法执行之前触发的，剩下的后置通知、返回通知、异常通知都要等目标方法执行完毕后再根据代码的逻辑执行不同的通知逻辑。
 
-#### 二、总结
+## 二、总结
 
-* Spring AOP的原理，从源码的层面出发，从@EnableAspectJAutoProxy注解开始，到生成代理对象以及代理对象的执行顺序都总结了一遍。
+* Spring AOP的原理，从源码的层面出发，从@EnableAspectJAutoProxy注解开始，到生成代理对象以及代理对象的执行顺序都总结了一遍，希望对你有所帮助！
 
 * **如果你觉得我的文章有用的话，欢迎点赞、收藏和关注。:laughing:**
 * **I'm a slow walker, but I never walk backwards**
