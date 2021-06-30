@@ -29,13 +29,12 @@ public class TransferServiceImpl implements TransferService {
         // ...... 可以增加扩展代码  @2
     }
 
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.NESTED) // @3
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW) // @3
     @Override
     public void incrementAmount(String accountId, BigDecimal amount) {
         // 不考虑任何并发情况，直接新增金额
         jdbcTemplate.update("UPDATE account SET amount = amount + ? WHERE id = ?", amount, accountId);
 
         // ...... 可以增加扩展代码  @4
-        int result = 1 / 0;
     }
 }
