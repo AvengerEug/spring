@@ -6,6 +6,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 
@@ -22,6 +25,20 @@ public class TransferServiceImpl implements TransferService {
         ((TransferService) AopContext.currentProxy()).incrementAmount(inAccountId, amount);
 
         // ...... 可以增加扩展代码  @1
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            System.out.println("有事务");
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
+                @Override
+                public void afterCompletion(int status) {
+                    if (status == TransactionSynchronization.STATUS_COMMITTED) {
+                        System.out.println("事务提交后的钩子函数");
+                    }
+                }
+            });
+        } else {
+            System.out.println("无事务");
+        }
 
         // 出钱
         jdbcTemplate.update("UPDATE account SET amount = amount - ? WHERE id = ?", amount, outAccountId);

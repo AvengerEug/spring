@@ -4,7 +4,7 @@
 
 * 学习了关于Spring AOP原理以及事务的基础知识后，今天咱们来聊聊Spring在底层是如何操作事务的。如果阅读到此文章，并且对Spring AOP原理不太了解的话，建议先阅读下本人的这篇文章：[Spring AOP原理篇：我用上我的洪荒之力来帮你彻底了解aop注解@EnableAspectJAutoProxy的原理](https://blog.csdn.net/avengerEug/article/details/118301931)的文章，后文的内容与这篇文章有很大的关联关系。
 
-## 一、先说说@EnableTransactionManagement注解具有哪些功能
+## 一、先说说@EnableTransactionManagement注解内部有哪些方法
 
 * 我们看下@EnableTransactionManagement注解的源码：
 
@@ -26,7 +26,7 @@
   }
   ```
 
-  其主要拥有三个方法，并且每个方法都有默认的值。通常情况下，我们使用@EnableTransactionManagement注解时，并不会额外的指定内部方法的返回值。那这三个方法的返回值具体有什么作用呢？请看下图：
+  其主要拥有三个方法，并且每个方法都有默认的值。通常情况下，我们使用@EnableTransactionManagement注解时，并不会额外的指定内部方法的返回值，用的都是默认值。那这三个方法的返回值具体有什么作用呢？请看下图：
 
   ![事务注解内部方法默认值及其含义.png](事务注解内部方法默认值及其含义.png)
 
@@ -77,9 +77,8 @@
   }
   ```
 
-  上文有说到，我们在使用@EnableTransactionManagement注解时，并没有特意去修改内部方法的返回值。因此，这里的mode就是**AdviceMode.PROXY**，proxyTargetClass为**false**。由源码逻辑可知：Spring最终会执行这段代码：`AopConfigUtils.registerAutoProxyCreatorIfNecessary(registry);`而这段代码的主要功能就是向Spring容器中添加
+  上文有说到，我们在使用@EnableTransactionManagement注解时，并没有特意去修改内部方法的返回值。因此，这里的mode就是**AdviceMode.PROXY**，proxyTargetClass为**false**。由源码逻辑可知：Spring最终会执行这段代码：`AopConfigUtils.registerAutoProxyCreatorIfNecessary(registry);`而这段代码的主要功能就是向Spring容器中添加这个bean：**InfrastructureAdvisorAutoProxyCreator**。那我们接下来该干嘛呢？是的，该看这个bean (**InfrastructureAdvisorAutoProxyCreator**)有什么样的作用了。
 
-  这个bean：**InfrastructureAdvisorAutoProxyCreator**。那我们接下来该干嘛呢？是的，该看这个bean**InfrastructureAdvisorAutoProxyCreator**有什么样的作用了。
 
 #### 2.1.1  InfrastructureAdvisorAutoProxyCreator的作用
 
@@ -87,15 +86,15 @@
 
   ![InfrastructureAdvisorAutoProxyCreator继承图.png](InfrastructureAdvisorAutoProxyCreator继承图.png)
 
-  我们着重看图中红框框中的类。然后我们再来看下在启用Spring AOP的注解@EnableAspectJAutoProxy内部导入的**AnnotationAwareAspectJAutoProxyCreator** bean的结构。
+  我们着重看图中**红框框**中的类。然后我们再来看下在启用Spring AOP的注解@EnableAspectJAutoProxy内部导入的**AnnotationAwareAspectJAutoProxyCreator** bean的类继承图：
 
   ![AnnotationAwareAspectJAutoProxyCreator继承图.png](AnnotationAwareAspectJAutoProxyCreator继承图.png)
 
-  他们都实现了同一个抽象类：**AbstractAutoProxyCreator**。这说明什么？这说明了主要`AnnotationAwareAspectJAutoProxyCreator和InfrastructureAdvisorAutoProxyCreator内部没有对AbstractAutoProxyCreator这个抽象父类做任何方法的重写的话，那他们就是拥有了相同的功能。`实际上呢，他们确实是没有重写AbstractAutoProxyCreator内部的任何方法。在[Spring AOP原理篇：我用上我的洪荒之力来帮你彻底了解aop注解@EnableAspectJAutoProxy的原理](https://blog.csdn.net/avengerEug/article/details/118301931)的文章中有提到，整个Spring AOP寻找切面、切面、通知的过程就是此方法**InstantiationAwareBeanPostProcessor#postProcessBeforeInstantiation**的功劳，而生成AOP代理对象就是**BeanPostProcessor#postProcessAfterInitialization**的功劳。而这些寻找切面、生成代理对象的功能其实是抽象父类**AbstractAutoProxyCreator**的功能，只要子类集成了它，并且未对这两个方法做任何重写操作的话，那这个子类也将拥有同样的功能。因此，我们的**InfrastructureAdvisorAutoProxyCreator**具备了寻找切面、切面、通知以及生成代理对象的功能了。
+  他们都实现了同一个公共抽象类：**AbstractAutoProxyCreator**。这说明什么？这说明了只要`AnnotationAwareAspectJAutoProxyCreator和InfrastructureAdvisorAutoProxyCreator内部没有对AbstractAutoProxyCreator这个抽象父类做任何方法的重写的话，那他们就是拥有了AbstractAutoProxyCreator的功能。`实际上呢，他们确实是没有重写AbstractAutoProxyCreator内部的任何方法。在[Spring AOP原理篇：我用上我的洪荒之力来帮你彻底了解aop注解@EnableAspectJAutoProxy的原理](https://blog.csdn.net/avengerEug/article/details/118301931)的文章中有提到，整个Spring AOP寻找切面、切面、通知的过程就是此方法**InstantiationAwareBeanPostProcessor#postProcessBeforeInstantiation**的功劳，而生成AOP代理对象就是**BeanPostProcessor#postProcessAfterInitialization**的功劳。而这些寻找切面、生成代理对象的功能其实是抽象父类**AbstractAutoProxyCreator**的功能。因此，我们的**InfrastructureAdvisorAutoProxyCreator**具备了寻找切面、切面、通知以及生成代理对象的功能了。
 
 ####  2.1.2 总结
 
-* 因此，我们的AutoProxyRegistrar的作用可以用下图来表示：
+* 因此，AutoProxyRegistrar的作用可以用下图来表示：
 
   ![AutoProxyRegistrar功能.png](AutoProxyRegistrar功能.png)
 
@@ -155,7 +154,7 @@
 
   ![BeanFactoryTransactionAttributeSourceAdvisor类继承图.png](BeanFactoryTransactionAttributeSourceAdvisor类继承图.png)
 
-  可以发现，它属于Advisor类型。这个时候，我们回忆一下Spring AOP在查询切面、切点、通知的时候，有没有寻找Advisor的过程？如果你记不清了没关系，我们再来温故下。继续选用上篇文章使用过的图：
+  可以发现，它属于Advisor类型。这个时候，我们回忆一下Spring AOP在查询切面、切点、通知的时候，**是不是存在一个寻找Advisor的过程**？如果你记不清了没关系，我们再来温故下。继续选用上篇文章使用过的图：
 
   ![AnnotationAwareAspectJAutoProxyCreator是如何找到切面对应的通知的.png](AnnotationAwareAspectJAutoProxyCreator是如何找到切面对应的通知的.png)
 
@@ -180,9 +179,7 @@
   }
   ```
 
-* 因此，对于在寻找事务相关的Advisor的逻辑而言，事务的性能更好一点。因为，它省去了遍历所有bean的过程，在使用@EnableTransactionManagement注解时已经自动为我们导入了一个类型为Advisor的bean。
-
-* 
+* 还记得这个方法吗？这个方法就是找到我们所有的切面，并解析成一个个的Advisor。而在寻找事务切面的过程中，并没有遍历所有的bean，因为我们的@EnableTransactionManagement注解已经向spring容器中导入了一个Advisor了。因此，对于在寻找事务切面的过程而言，事务的性能更好一点。因为，它省去了遍历所有bean的过程，在使用@EnableTransactionManagement注解时已经自动为我们导入了一个类型为Advisor的bean。
 
 #### 2.2.2 总结
 
@@ -200,7 +197,7 @@
 
 ## 三、事务在底层的执行原理
 
-* 此部分不再打算继续总结了，因为其执行步骤和原理在[Spring AOP原理篇：我用上我的洪荒之力来帮你彻底了解aop注解@EnableAspectJAutoProxy的原理](https://blog.csdn.net/avengerEug/article/details/118301931)中已经分析过了，还是通过责任链设计模式调用的，只不过链路上的具体操作可能不太一样。在AOP中，链路上的个链的功能就是负责调用我们定义的各种通知。而在事务的调用链路中，只有一条链，就是在ProxyTransactionManagementConfiguration内部定义的transactionInterceptor，在此链路中会根据当前方法的事务隔离机制来做一些额外的处理，不过主线流程就是开启事务、提交/回滚事务。
+* 此部分不再打算继续分析了，因为其执行步骤和原理在[Spring AOP原理篇：我用上我的洪荒之力来帮你彻底了解aop注解@EnableAspectJAutoProxy的原理](https://blog.csdn.net/avengerEug/article/details/118301931)中已经分析过了，还是通过责任链设计模式调用的，只不过链路上的具体操作可能不太一样。在AOP中，链路上的个链的功能就是负责调用我们定义的各种通知。而在事务的调用链路中，只有一条链，就是在ProxyTransactionManagementConfiguration内部定义的transactionInterceptor，在此链路中会根据当前方法的事务隔离机制来做一些额外的处理，不过主线流程就是开启事务、提交/回滚事务。如果想了解其内部的调用细节，可以参考此方法：**org.springframework.transaction.interceptor.TransactionInterceptor#invoke**
 
 ## 四、总结
 

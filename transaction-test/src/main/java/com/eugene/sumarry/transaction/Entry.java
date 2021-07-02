@@ -32,10 +32,10 @@ public class Entry {
         @Bean
         public DataSource dataSource() {
             DriverManagerDataSource driverManagerDataSource = new DriverManagerDataSource();
-            driverManagerDataSource.setUrl("jdbc:mysql://127.0.0.1:3306/transaction_test?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowMultiQueries=true");
+            driverManagerDataSource.setUrl("jdbc:mysql://116.62.118.51:52110/transaction_test?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowMultiQueries=true");
             driverManagerDataSource.setUsername("root");
             driverManagerDataSource.setDriverClassName("com.mysql.jdbc.Driver");
-            driverManagerDataSource.setPassword("");
+            driverManagerDataSource.setPassword("root");
             return driverManagerDataSource;
         }
 
