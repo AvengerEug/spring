@@ -10,4 +10,7 @@ public interface TransferService {
     // 加钱操作
     void incrementAmount(String accountId, BigDecimal amount);
 
+    // 扣钱操作
+    void decrementAmount(String accountId, BigDecimal amount);
+
 }

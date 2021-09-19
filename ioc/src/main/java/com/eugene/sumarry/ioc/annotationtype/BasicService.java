@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
  *     @Lookup
  *     public abstract BasicService getBasicService(String userName);
  *
- *     @Lookup
+ *     @Lookups
  *     public abstract BasicService getBasicService();
  *
  *     当调用带参数的方法时, 会调用带参数的构造方法. 以此类推
