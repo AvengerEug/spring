@@ -26,7 +26,7 @@
   ```
 
 ## 二、启动流程图
-
+* 在spring容器初始化完成后，监听ApplicationContextRefresh事件，此监听器org.springframework.web.servlet.FrameworkServlet对spring的事件做了监听，如果是ContextRefreshedEvent事件的话，将执行Dispatcher容器的refresh方法（在这里初始化url与mapping的映射）
 ![启动流程图](./spring-mvc启动流程.png)
 
 ## 三、执行请求流程图
