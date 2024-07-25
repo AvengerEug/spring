@@ -1,5 +1,6 @@
 package com.eugene.sumarry.springmvc.uploadfile;
 
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.web.WebApplicationInitializer;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.DispatcherServlet;
@@ -26,6 +27,7 @@ public class MyWebApplicationInitializer implements WebApplicationInitializer {
         AnnotationConfigWebApplicationContext ac = new AnnotationConfigWebApplicationContext();
         ac.register(AppConfig.class);
         ac.refresh();
+        System.out.println("主容器 context地址：" + ac.getBeanFactory() + ", 类加载器：" + AnnotationConfigWebApplicationContext.class.getClassLoader());
 
         // Create and register the DispatcherServlet
         DispatcherServlet servlet = new DispatcherServlet(ac);

@@ -6,7 +6,7 @@ import org.apache.catalina.startup.Tomcat;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.DispatcherServlet;
 
-public class Application {
+public class ApplicationSSE {
 
     public static void main(String[] args) throws Exception {
         Tomcat tomcat = new Tomcat();
@@ -21,7 +21,7 @@ public class Application {
         Wrapper wrapper = tomcat.addServlet("/", "dispatchServlet", dispatcherServlet);
         wrapper.addMapping("/");
         wrapper.setLoadOnStartup(1);
-//        wrapper.setAsyncSupported(true);
+        wrapper.setAsyncSupported(true);
 
         tomcat.start();
         tomcat.getServer().await();
